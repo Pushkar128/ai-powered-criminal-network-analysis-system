@@ -10,21 +10,9 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 # In-memory store for suspect face signatures and live GPS sightings
 SUSPECT_FACES = []
 
-# Persistent historical sightings log archive
-LIVE_SIGHTINGS = [
-    {
-        "id": "SIGHT_HIST_01",
-        "suspect_id": "PER_1001",
-        "name": "Rashid Khan @Bhai",
-        "lat": 17.4435,
-        "lng": 78.5492,
-        "location_name": "Moulali Checkpoint Camera #4 (17.4435, 78.5492)",
-        "timestamp": "2026-09-16 14:20:10",
-        "confidence": 0.962,
-        "risk": "CRITICAL",
-        "is_active_session": False
-    }
-]
+# Persistent historical sightings log archive (starts empty until live camera scans occur)
+LIVE_SIGHTINGS = []
+
 
 
 
