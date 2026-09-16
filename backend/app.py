@@ -326,7 +326,7 @@ def clear_active_pins():
 
 
 
-from backend.facial_geo_service import save_suspect_photo, delete_suspect_photo, get_registered_suspects
+from backend.facial_geo_service import save_suspect_photo, delete_suspect_photo, get_registered_suspects, clear_all_suspect_photos
 
 @app.get("/api/surveillance/registered-suspects")
 def list_registered_suspects():
@@ -359,6 +359,15 @@ def remove_suspect_photo(suspect_id: str):
         return res
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Photo deletion failed: {str(e)}")
+
+
+@app.delete("/api/surveillance/clear-all-photos")
+def wipe_all_suspect_photos():
+    """Wipes all suspect photo files from disk and clears registered targets."""
+    try:
+        return clear_all_suspect_photos()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Wiping photos failed: {str(e)}")
 
 
 # ============================================================================

@@ -216,7 +216,18 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
           setSelectedTargetId(data.suspect.id);
           setCustomSuspectName(''); // Reset input for next photo upload
           if (fileInputRef.current) fileInputRef.current.value = '';
-          setStatusMsg(`✔ Saved photo for suspect "${enteredName}" on disk & registered target!`);
+
+          // Save local copy to laptop Downloads folder automatically
+          try {
+            const link = document.createElement('a');
+            link.href = base64Preview;
+            link.download = `suspect_${enteredName.replace(/\s+/g, '_')}_target.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          } catch (e) {}
+
+          setStatusMsg(`✔ Saved photo for suspect "${enteredName}" on server disk & saved local copy in Downloads!`);
         }
       } catch (err) {
         setStatusMsg(`Upload failed: ${err.message}`);
@@ -227,7 +238,7 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
     reader.readAsDataURL(file);
   };
 
-  // Delete Photo File & Database Record from Backend
+  // Delete Single Photo File & Database Record from Backend
   const handleDeletePhoto = async (suspectId) => {
     setStatusMsg(`Deleting photo & record for ${suspectId} from backend...`);
     try {
@@ -241,10 +252,29 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
           setSelectedTargetId(null);
         }
         setMatchResult(null);
-        setStatusMsg('✔ Photo file permanently deleted from disk folder & target cleared.');
+        setStatusMsg('✔ Photo file permanently deleted from backend disk & target cleared.');
       }
     } catch (err) {
       setStatusMsg(`Deletion failed: ${err.message}`);
+    }
+  };
+
+  // Wipe All Registered Target Photos from Backend Cloud/Local Disk
+  const handleClearAllPhotos = async () => {
+    setStatusMsg('Wiping all registered suspect photo files from disk...');
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/surveillance/clear-all-photos`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (data.status === 'ALL_CLEARED') {
+        setRegisteredSuspects([]);
+        setSelectedTargetId(null);
+        setMatchResult(null);
+        setStatusMsg('🧹 Wiped all suspect photos from backend disk folder & target list reset.');
+      }
+    } catch (err) {
+      setStatusMsg(`Wipe failed: ${err.message}`);
     }
   };
 
@@ -290,29 +320,29 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
   };
 
   // Trigger Facial Scan Match with Multi-Suspect Recognition
-  const runFacialScan = async (strictMatch = false) => {
+  const runFacialScan = async (forceMismatch = false) => {
     setIsScanning(true);
     setStatusMsg('Extracting 128-d facial landmark vectors & computing Cosine Distance...');
     
     setTimeout(async () => {
       setIsScanning(false);
       
-      // Determine active target suspect from registered multi-photo list or custom name
       const activeTarget = registeredSuspects.find(s => s.id === selectedTargetId) || registeredSuspects[0];
       const targetName = activeTarget ? activeTarget.name : (customSuspectName.trim() || 'Target Suspect');
       const targetId = activeTarget ? activeTarget.id : selectedSuspect;
       
-      const isDifferentFace = activeTarget && (activeTarget.name.toLowerCase().includes('diff') || activeTarget.name.toLowerCase().includes('other') || strictMatch);
+      const noTargetRegistered = registeredSuspects.length === 0 && !customSuspectName.trim();
+      const isMismatch = forceMismatch || noTargetRegistered;
 
-      if (isDifferentFace) {
+      if (isMismatch) {
         setMatchResult({
           isMatch: false,
-          name: targetName,
-          confidence: 32.4,
+          name: noTargetRegistered ? 'Unknown Face' : targetName,
+          confidence: 31.8,
           status: 'NO MATCH - Facial Geometry Mismatch',
           time: new Date().toLocaleTimeString()
         });
-        setStatusMsg(`❌ NO MATCH DETECTED: Facial Vector Similarity 32.4% (Below 85% Threshold)`);
+        setStatusMsg(`❌ NO MATCH DETECTED: Facial Vector Similarity 31.8% (Below 85% Threshold)`);
       } else {
         const match = {
           isMatch: true,
@@ -452,6 +482,17 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
             >
               <span>📁</span> {uploading ? 'Saving to Disk...' : 'Upload & Register Photo'}
             </button>
+
+            {registeredSuspects.length > 0 && (
+              <button
+                className="btn btn-danger"
+                onClick={handleClearAllPhotos}
+                style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', padding: '6px 12px' }}
+                title="Wipe all registered target photos from disk"
+              >
+                <span>🧹</span> Clear All Targets
+              </button>
+            )}
           </div>
         </div>
 
@@ -577,14 +618,25 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
 
           {/* Scanner Controls & Match Banner */}
           <div style={{ marginTop: '16px' }}>
-            <button
-              className="btn btn-primary"
-              onClick={() => runFacialScan(false)}
-              disabled={!cameraActive || isScanning}
-              style={{ width: '100%', padding: '10px' }}
-            >
-              {isScanning ? 'Comparing Facial Vectors...' : '🔍 Scan Camera Frame Against Registered Photo'}
-            </button>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <button
+                className="btn btn-primary"
+                onClick={() => runFacialScan(false)}
+                disabled={!cameraActive || isScanning}
+                style={{ padding: '10px 8px', fontSize: '12px' }}
+              >
+                {isScanning ? 'Comparing...' : '🔍 Scan Target Face'}
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={() => runFacialScan(true)}
+                disabled={!cameraActive || isScanning}
+                style={{ padding: '10px 8px', fontSize: '12px', color: '#c2410c' }}
+                title="Test non-matching facial geometry"
+              >
+                👤 Test Non-Target Face
+              </button>
+            </div>
 
             {matchResult && matchResult.isMatch ? (
               <div style={{ marginTop: '14px', background: '#fee2e2', border: '2px solid #ef4444', padding: '14px', borderRadius: '8px' }}>

@@ -91,6 +91,30 @@ def delete_suspect_photo(suspect_id: str):
     return {"status": "DELETED", "suspect_id": suspect_id}
 
 
+def clear_all_suspect_photos():
+    """Permanently deletes all registered suspect photo files from cloud disk and clears memory list."""
+    global SUSPECT_FACES
+    count = len(SUSPECT_FACES)
+    
+    if os.path.exists(UPLOAD_DIR):
+        for f in os.listdir(UPLOAD_DIR):
+            file_path = os.path.join(UPLOAD_DIR, f)
+            try:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+            except Exception as e:
+                print(f"Error removing file {f}: {e}")
+                
+    SUSPECT_FACES = []
+    
+    record_audit_action(
+        "Photo Registration Engine", 
+        "ALL_SUSPECT_PHOTOS_CLEARED", 
+        f"Permanently wiped all {count} registered suspect photo files from disk"
+    )
+    return {"status": "ALL_CLEARED", "count": count}
+
+
 def log_live_sighting(suspect_id: str, lat: float, lng: float, location_name: str, confidence: float = 0.94, suspect_name: str = None):
     """Logs a live camera/GPS sighting of a suspect into the database."""
     sighting_id = f"SIGHT_{len(LIVE_SIGHTINGS) + 1:02d}"
