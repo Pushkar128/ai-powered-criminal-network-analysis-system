@@ -39,7 +39,7 @@ os.makedirs(uploads_dir, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 
-@app.get("/")
+@app.get("/api/health")
 def health_check():
     """Health check endpoint to verify backend service status."""
     return {
@@ -57,6 +57,7 @@ def health_check():
             "/api/news/feed",
         ],
     }
+
 
 
 # ============================================================================
