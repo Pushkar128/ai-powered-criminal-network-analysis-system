@@ -41,8 +41,12 @@ const INITIAL_EDGES = [
 ];
 
 export default function App() {
-  const [view, setView] = useState('landing'); // 'landing' | 'main'
-  const [userRole, setUserRole] = useState('public'); // 'public' | 'admin'
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialRole = urlParams.get('role') || 'public';
+  const initialView = urlParams.get('mode') === 'portal' || urlParams.has('role') ? 'main' : 'landing';
+
+  const [view, setView] = useState(initialView); // 'landing' | 'main'
+  const [userRole, setUserRole] = useState(initialRole); // 'public' | 'admin'
   const [activeTab, setActiveTab] = useState('graph-tab');
   const [nodesData, setNodesData] = useState(INITIAL_NODES);
   const [edgesData, setEdgesData] = useState(INITIAL_EDGES);
@@ -203,7 +207,10 @@ export default function App() {
         onOpenUpload={() => setUploadModalOpen(true)}
         onOpenAudit={() => setAuditModalOpen(true)}
         userRole={userRole}
-        onGoHome={() => setView('landing')}
+        onGoHome={() => {
+          window.history.pushState({}, '', window.location.pathname);
+          setView('landing');
+        }}
       />
 
       <div className="main-body">
