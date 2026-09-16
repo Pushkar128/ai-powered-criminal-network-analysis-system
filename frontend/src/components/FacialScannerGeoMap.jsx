@@ -346,7 +346,11 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
 
           fetchHeatmap();
         } catch (e) {}
-      const formatTime = (ts) => {
+      }
+    }, 1500);
+  };
+
+  const formatTime = (ts) => {
     if (!ts) return '';
     try {
       if (ts.includes('-') && !ts.includes('T') && !ts.includes('Z')) {
@@ -360,6 +364,7 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
       return ts;
     }
   };
+
 
   return (
     <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
