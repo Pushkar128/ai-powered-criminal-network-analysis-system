@@ -5,6 +5,7 @@ export default function NewsIngestionPanel({ onRefreshGraph, currentCase, onSele
   const [loading, setLoading] = useState(false);
   const [ingestionResults, setIngestionResults] = useState(null);
   const [newsFeed, setNewsFeed] = useState([]);
+  const [collapsed, setCollapsed] = useState(false);
 
   const handleIngestNews = async () => {
     setLoading(true);
@@ -30,6 +31,31 @@ export default function NewsIngestionPanel({ onRefreshGraph, currentCase, onSele
       .catch(() => {});
   }, []);
 
+  if (collapsed) {
+    return (
+      <div style={{ padding: '10px 16px', background: '#0f172a', borderRadius: '10px', border: '1px solid #1e293b', color: '#f8fafc', margin: '12px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ color: '#38bdf8', fontWeight: 700, fontSize: '0.9rem' }}>📡 OSINT Live News Feed & Case Filter</span>
+          <select
+            value={currentCase || 'ALL'}
+            onChange={(e) => onSelectCase(e.target.value)}
+            style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '4px 10px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}
+          >
+            <option value="ALL">🌐 All Cases Combined Network</option>
+            {casesList && casesList.map((c) => (
+              <option key={c.case_id} value={c.case_id}>{c.title} ({c.node_count} Nodes)</option>
+            ))}
+          </select>
+        </div>
+        <button
+          onClick={() => setCollapsed(false)}
+          style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '4px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
+        >
+          ▼ Expand News Panel
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: '16px', background: '#0f172a', borderRadius: '12px', border: '1px solid #1e293b', color: '#f8fafc', margin: '16px 0' }}>
@@ -42,25 +68,35 @@ export default function NewsIngestionPanel({ onRefreshGraph, currentCase, onSele
             Ingests Google News (Past 24h) → AI Entity Resolution → Auto Updates Existing Graph or Creates New Case
           </p>
         </div>
-        <button
-          onClick={handleIngestNews}
-          disabled={loading}
-          style={{
-            background: loading ? '#475569' : 'linear-gradient(135deg, #0284c7 0%, #2563eb 100%)',
-            color: '#ffffff',
-            border: 'none',
-            padding: '10px 18px',
-            borderRadius: '8px',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            fontWeight: '600',
-            fontSize: '0.9rem',
-            boxShadow: '0 4px 12px rgba(37,99,235,0.3)',
-            transition: 'all 0.2s'
-          }}
-        >
-          {loading ? '⏳ Processing News & Updating Neo4j...' : '⚡ Process Live News Feed'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button
+            onClick={handleIngestNews}
+            disabled={loading}
+            style={{
+              background: loading ? '#475569' : 'linear-gradient(135deg, #0284c7 0%, #2563eb 100%)',
+              color: '#ffffff',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontWeight: '600',
+              fontSize: '0.85rem',
+              boxShadow: '0 4px 12px rgba(37,99,235,0.3)',
+              transition: 'all 0.2s'
+            }}
+          >
+            {loading ? '⏳ Processing News & Updating Neo4j...' : '⚡ Process Live News Feed'}
+          </button>
+          <button
+            onClick={() => setCollapsed(true)}
+            style={{ background: '#1e293b', color: '#94a3b8', border: '1px solid #334155', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}
+            title="Hide panel to view full graph canvas"
+          >
+            ▲ Hide Panel
+          </button>
+        </div>
       </div>
+
 
       {/* Case Selector Dropdown */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#1e293b', padding: '10px 14px', borderRadius: '8px', marginBottom: '12px' }}>
