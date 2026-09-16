@@ -350,4 +350,19 @@ def remove_suspect_photo(suspect_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Photo deletion failed: {str(e)}")
 
+
+# ============================================================================
+# FEATURE 10: SERVE UPLOADS & UNIFIED SINGLE-SERVICE FRONTEND
+# ============================================================================
+from fastapi.staticfiles import StaticFiles
+
+uploads_dir = os.path.join(os.path.dirname(__file__), "uploads")
+os.makedirs(uploads_dir, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
+
+frontend_dist_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist")
+if os.path.exists(frontend_dist_dir):
+    app.mount("/", StaticFiles(directory=frontend_dist_dir, html=True), name="frontend")
+
+
     
