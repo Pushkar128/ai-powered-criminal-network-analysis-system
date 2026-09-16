@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config';
 
 export default function NewsIngestionPanel({ onRefreshGraph, currentCase, onSelectCase, casesList, onRefreshCases }) {
   const [loading, setLoading] = useState(false);
@@ -8,7 +9,7 @@ export default function NewsIngestionPanel({ onRefreshGraph, currentCase, onSele
   const handleIngestNews = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/news/ingest?max_articles=8');
+      const res = await fetch(`${API_BASE_URL}/api/news/ingest?max_articles=8`);
       const data = await res.json();
       setIngestionResults(data);
       if (onRefreshGraph) onRefreshGraph();
@@ -21,13 +22,14 @@ export default function NewsIngestionPanel({ onRefreshGraph, currentCase, onSele
   };
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/news/feed')
+    fetch(`${API_BASE_URL}/api/news/feed`)
       .then(res => res.json())
       .then(data => {
         if (data.articles) setNewsFeed(data.articles);
       })
       .catch(() => {});
   }, []);
+
 
   return (
     <div style={{ padding: '16px', background: '#0f172a', borderRadius: '12px', border: '1px solid #1e293b', color: '#f8fafc', margin: '16px 0' }}>

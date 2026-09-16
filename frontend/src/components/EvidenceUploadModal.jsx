@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_BASE_URL } from '../config';
 
 export default function EvidenceUploadModal({ isOpen, onClose, onRefreshGraph }) {
   const [activeTab, setActiveTab] = useState('text');
@@ -16,7 +17,7 @@ export default function EvidenceUploadModal({ isOpen, onClose, onRefreshGraph })
     setLoading(true);
     setStatusMsg('Parsing raw FIR text via NLP engine...');
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/evidence/ingest-text', {
+      const res = await fetch(`${API_BASE_URL}/api/evidence/ingest-text`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fir_text: firText, case_id: caseId })
@@ -41,11 +42,12 @@ export default function EvidenceUploadModal({ isOpen, onClose, onRefreshGraph })
     setLoading(true);
     setStatusMsg('Ingesting CDR CSV dataset...');
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/evidence/ingest-csv', {
+      const res = await fetch(`${API_BASE_URL}/api/evidence/ingest-csv`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ csv_text: csvText, file_type: fileType, case_id: caseId })
       });
+
       const data = await res.json();
       if (data.status === 'SUCCESS') {
         setStatusMsg(`Ingested ${data.processed_rows} call detail/bank records into network graph!`);

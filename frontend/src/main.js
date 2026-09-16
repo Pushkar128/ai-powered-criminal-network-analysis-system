@@ -1,6 +1,7 @@
-// NCRB Forensic Criminal Network Intelligence - Main Application Logic
+const API_BASE_URL = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
+  ? 'http://127.0.0.1:8000'
+  : (typeof window !== 'undefined' ? window.location.origin : 'http://127.0.0.1:8000');
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
 
 // High Quality Fallback Dataset for Instant Demonstration & Testing
 const MOCK_GRAPH_DATA = {

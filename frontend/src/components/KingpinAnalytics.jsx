@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config';
 
 export default function KingpinAnalytics() {
   const [kingpins, setKingpins] = useState([]);
@@ -6,14 +7,14 @@ export default function KingpinAnalytics() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/analytics/kingpins')
+    fetch(`${API_BASE_URL}/api/analytics/kingpins`)
       .then(res => res.json())
       .then(data => {
         if (data.kingpins) setKingpins(data.kingpins);
       })
       .catch(() => {});
 
-    fetch('http://127.0.0.1:8000/api/analytics/money-loops')
+    fetch(`${API_BASE_URL}/api/analytics/money-loops`)
       .then(res => res.json())
       .then(data => {
         if (data.money_loops) setMoneyLoops(data.money_loops);
@@ -21,6 +22,7 @@ export default function KingpinAnalytics() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
 
   return (
     <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>

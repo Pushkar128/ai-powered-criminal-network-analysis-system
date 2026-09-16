@@ -9,6 +9,7 @@ import KingpinAnalytics from './components/KingpinAnalytics';
 import EvidenceUploadModal from './components/EvidenceUploadModal';
 import ChainOfCustodyAudit from './components/ChainOfCustodyAudit';
 import FacialScannerGeoMap from './components/FacialScannerGeoMap';
+import { API_BASE_URL } from './config';
 
 // INITIAL_NODES & EDGES...
 
@@ -54,8 +55,8 @@ export default function App() {
 
   const fetchGraphData = (caseId = selectedCase) => {
     const url = caseId && caseId !== 'ALL' 
-      ? `http://127.0.0.1:8000/api/graph?case_id=${encodeURIComponent(caseId)}` 
-      : 'http://127.0.0.1:8000/api/graph';
+      ? `${API_BASE_URL}/api/graph?case_id=${encodeURIComponent(caseId)}` 
+      : `${API_BASE_URL}/api/graph`;
 
     fetch(url)
       .then(res => res.json())
@@ -68,7 +69,7 @@ export default function App() {
   };
 
   const fetchCases = () => {
-    fetch('http://127.0.0.1:8000/api/cases')
+    fetch(`${API_BASE_URL}/api/cases`)
       .then(res => res.json())
       .then(data => {
         if (data.cases) setCasesList(data.cases);

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_BASE_URL } from '../config';
 
 export default function SuspectDossier({ selectedNode, edgesData, onClose }) {
   const [aiReport, setAiReport] = useState(null);
@@ -34,7 +35,7 @@ export default function SuspectDossier({ selectedNode, edgesData, onClose }) {
   const fetchAiReport = async () => {
     setLoadingAi(true);
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/dossier/ai-report/${encodeURIComponent(selectedNode.id)}`);
+      const res = await fetch(`${API_BASE_URL}/api/dossier/ai-report/${encodeURIComponent(selectedNode.id)}`);
       const data = await res.json();
       setAiReport(data);
     } catch (e) {
@@ -43,6 +44,7 @@ export default function SuspectDossier({ selectedNode, edgesData, onClose }) {
       setLoadingAi(false);
     }
   };
+
 
   const associations = edgesData.filter(e => e.source === selectedNode.id || e.target === selectedNode.id);
 

@@ -1,14 +1,54 @@
 import React, { useState } from 'react';
+import { API_BASE_URL } from '../config';
 
 export default function ShortestPathFinder({ nodesData = [], edgesData = [] }) {
-  const defaultSource = nodesData.length > 0 ? nodesData[0].id : 'P001';
-  const defaultTarget = nodesData.length > 1 ? nodesData[1].id : 'ORG001';
+  const defaultSource = nodesData.length > 0 ? nodesData[0].id : 'PER_1001';
+  const defaultTarget = nodesData.length > 1 ? nodesData[1].id : 'PER_1002';
 
   const [source, setSource] = useState(defaultSource);
   const [target, setTarget] = useState(defaultTarget);
   const [pathResult, setPathResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  const runLocalBfs = () => {
+    const queue = [[source]];
+    const visited = new Set([source]);
+    let found = null;
+
+    while (queue.length > 0) {
+      const path = queue.shift();
+      const curr = path[path.length - 1];
+
+      if (curr === target) {
+        found = path;
+        break;
+      }
+
+      const neighbors = [];
+      edgesData.forEach(e => {
+        if (e.source === curr) neighbors.push(e.target);
+        if (e.target === curr) neighbors.push(e.source);
+      });
+
+      for (const n of neighbors) {
+        if (!visited.has(n)) {
+          visited.add(n);
+          queue.push([...path, n]);
+        }
+      }
+    }
+
+    if (found) {
+      const formattedNodes = found.map(id => {
+        const nodeObj = nodesData.find(n => n.id === id) || { name: id, type: 'Entity' };
+        return { id, label: nodeObj.name || id, type: nodeObj.type || nodeObj.label || 'Entity' };
+      });
+      setPathResult({ nodes: formattedNodes, hops: found.length - 1 });
+    } else {
+      setErrorMsg('No direct or indirect relationship chain found between these two entities.');
+    }
+  };
 
   const tracePath = async () => {
     if (!source || !target) return;
@@ -17,7 +57,7 @@ export default function ShortestPathFinder({ nodesData = [], edgesData = [] }) {
     setPathResult(null);
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/path?source=${encodeURIComponent(source)}&target=${encodeURIComponent(target)}`);
+      const res = await fetch(`${API_BASE_URL}/api/path?source=${encodeURIComponent(source)}&target=${encodeURIComponent(target)}`);
       const data = await res.json();
       
       if (data.found && data.path && data.path.path_nodes) {
@@ -27,50 +67,15 @@ export default function ShortestPathFinder({ nodesData = [], edgesData = [] }) {
           bottleneck: data.path.critical_bottleneck_node
         });
       } else {
-        // Fallback local BFS if backend path wasn't found in Neo4j traversal limits
-        const queue = [[source]];
-        const visited = new Set([source]);
-        let found = null;
-
-        while (queue.length > 0) {
-          const path = queue.shift();
-          const curr = path[path.length - 1];
-
-          if (curr === target) {
-            found = path;
-            break;
-          }
-
-          const neighbors = [];
-          edgesData.forEach(e => {
-            if (e.source === curr) neighbors.push(e.target);
-            if (e.target === curr) neighbors.push(e.source);
-          });
-
-          for (const n of neighbors) {
-            if (!visited.has(n)) {
-              visited.add(n);
-              queue.push([...path, n]);
-            }
-          }
-        }
-
-        if (found) {
-          const formattedNodes = found.map(id => {
-            const nodeObj = nodesData.find(n => n.id === id) || { name: id, type: 'Entity' };
-            return { id, label: nodeObj.name || id, type: nodeObj.type || nodeObj.label || 'Entity' };
-          });
-          setPathResult({ nodes: formattedNodes, hops: found.length - 1 });
-        } else {
-          setErrorMsg('No direct or indirect relationship chain found between these two entities.');
-        }
+        runLocalBfs();
       }
     } catch (e) {
-      setErrorMsg('Failed to query path discovery API.');
+      runLocalBfs();
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="path-finder-panel glass-card">

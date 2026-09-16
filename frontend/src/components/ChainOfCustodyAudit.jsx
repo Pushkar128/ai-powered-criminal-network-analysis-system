@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config';
 
 export default function ChainOfCustodyAudit({ isOpen, onClose }) {
   const [logs, setLogs] = useState([]);
@@ -6,7 +7,8 @@ export default function ChainOfCustodyAudit({ isOpen, onClose }) {
 
   useEffect(() => {
     if (isOpen) {
-      fetch('http://127.0.0.1:8000/api/audit/chain-of-custody')
+      fetch(`${API_BASE_URL}/api/audit/chain-of-custody`)
+
         .then(res => res.json())
         .then(data => {
           if (data.audit_logs) setLogs(data.audit_logs);

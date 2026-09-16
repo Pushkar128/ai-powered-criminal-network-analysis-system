@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config';
 
 export default function EntityResolution({ onSelectNode }) {
   const [resolutions, setResolutions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/entity-resolution')
+    fetch(`${API_BASE_URL}/api/entity-resolution`)
+
       .then(res => res.json())
       .then(data => {
         if (data.resolved_entities && data.resolved_entities.length > 0) {

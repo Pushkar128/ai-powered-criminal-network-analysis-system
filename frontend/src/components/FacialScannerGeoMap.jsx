@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { API_BASE_URL } from '../config';
 
 export default function FacialScannerGeoMap({ nodesData = [] }) {
   const videoRef = useRef(null);
@@ -32,7 +33,7 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
 
   // Auto-polling heatmap & live sightings every 3 seconds for nationwide multi-device sync
   const fetchHeatmap = () => {
-    fetch('http://127.0.0.1:8000/api/surveillance/heatmap')
+    fetch(`${API_BASE_URL}/api/surveillance/heatmap`)
       .then(res => res.json())
       .then(data => {
         if (data.sightings) {
@@ -51,6 +52,7 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
       })
       .catch(() => {});
   };
+
 
   useEffect(() => {
     fetchHeatmap();
@@ -189,7 +191,7 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
       formData.append('suspect_name', enteredName);
 
       try {
-        const res = await fetch('http://127.0.0.1:8000/api/surveillance/upload-photo', {
+        const res = await fetch(`${API_BASE_URL}/api/surveillance/upload-photo`, {
           method: 'POST',
           body: formData
         });
@@ -216,7 +218,7 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
   const handleDeletePhoto = async (suspectId) => {
     setStatusMsg(`Deleting photo & record for ${suspectId} from backend...`);
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/surveillance/delete-photo/${suspectId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/surveillance/delete-photo/${suspectId}`, {
         method: 'DELETE'
       });
       const data = await res.json();
@@ -269,7 +271,7 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
   const handleClearMapPins = async () => {
     setActiveSessionSightings([]);
     try {
-      await fetch('http://127.0.0.1:8000/api/surveillance/clear-active-pins', { method: 'POST' });
+      await fetch(`${API_BASE_URL}/api/surveillance/clear-active-pins`, { method: 'POST' });
     } catch (e) {}
     setStatusMsg('🧹 Live pins cleared from map view. All records remain preserved in Sighting History Archive.');
   };
@@ -328,7 +330,7 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
 
         // Log sighting to backend API for persistent history archive
         try {
-          await fetch('http://127.0.0.1:8000/api/surveillance/sighting', {
+          await fetch(`${API_BASE_URL}/api/surveillance/sighting`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -340,6 +342,7 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
               confidence: 0.958
             })
           });
+
 
           fetchHeatmap();
         } catch (e) {}
