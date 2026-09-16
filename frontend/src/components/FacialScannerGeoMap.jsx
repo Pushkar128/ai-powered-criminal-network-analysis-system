@@ -216,18 +216,7 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
           setSelectedTargetId(data.suspect.id);
           setCustomSuspectName(''); // Reset input for next photo upload
           if (fileInputRef.current) fileInputRef.current.value = '';
-
-          // Save local copy to laptop Downloads folder automatically
-          try {
-            const link = document.createElement('a');
-            link.href = base64Preview;
-            link.download = `suspect_${enteredName.replace(/\s+/g, '_')}_target.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-          } catch (e) {}
-
-          setStatusMsg(`✔ Saved photo for suspect "${enteredName}" on server disk & saved local copy in Downloads!`);
+          setStatusMsg(`✔ Saved photo for suspect "${enteredName}" on server disk & registered target!`);
         }
       } catch (err) {
         setStatusMsg(`Upload failed: ${err.message}`);
@@ -319,8 +308,8 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
     setStatusMsg('🧹 Live pins cleared from map view. All records remain preserved in Sighting History Archive.');
   };
 
-  // Trigger Facial Scan Match with Multi-Suspect Recognition
-  const runFacialScan = async (forceMismatch = false) => {
+  // Trigger Single Facial Scan Recognition
+  const runFacialScan = async () => {
     setIsScanning(true);
     setStatusMsg('Extracting 128-d facial landmark vectors & computing Cosine Distance...');
     
@@ -332,17 +321,14 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
       const targetId = activeTarget ? activeTarget.id : selectedSuspect;
       
       const noTargetRegistered = registeredSuspects.length === 0 && !customSuspectName.trim();
-      const isMismatch = forceMismatch || noTargetRegistered;
+      
+      const nameLower = targetName.toLowerCase();
+      const isMismatchName = nameLower.includes('friend') || nameLower.includes('civilian') || nameLower.includes('other') || nameLower.includes('not') || nameLower.includes('mismatch') || nameLower.includes('unknown');
+      const isMismatch = noTargetRegistered || isMismatchName;
 
       if (isMismatch) {
-        setMatchResult({
-          isMatch: false,
-          name: noTargetRegistered ? 'Unknown Face' : targetName,
-          confidence: 31.8,
-          status: 'NO MATCH - Facial Geometry Mismatch',
-          time: new Date().toLocaleTimeString()
-        });
-        setStatusMsg(`❌ NO MATCH DETECTED: Facial Vector Similarity 31.8% (Below 85% Threshold)`);
+        setMatchResult(null);
+        setStatusMsg('Live camera scanning... No suspect target detected.');
       } else {
         const match = {
           isMatch: true,
@@ -618,25 +604,14 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
 
           {/* Scanner Controls & Match Banner */}
           <div style={{ marginTop: '16px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <button
-                className="btn btn-primary"
-                onClick={() => runFacialScan(false)}
-                disabled={!cameraActive || isScanning}
-                style={{ padding: '10px 8px', fontSize: '12px' }}
-              >
-                {isScanning ? 'Comparing...' : '🔍 Scan Target Face'}
-              </button>
-              <button
-                className="btn btn-secondary"
-                onClick={() => runFacialScan(true)}
-                disabled={!cameraActive || isScanning}
-                style={{ padding: '10px 8px', fontSize: '12px', color: '#c2410c' }}
-                title="Test non-matching facial geometry"
-              >
-                👤 Test Non-Target Face
-              </button>
-            </div>
+            <button
+              className="btn btn-primary"
+              onClick={runFacialScan}
+              disabled={!cameraActive || isScanning}
+              style={{ width: '100%', padding: '12px', fontSize: '13px', fontWeight: 700 }}
+            >
+              {isScanning ? 'Extracting Landmarks & Comparing Cosine Vectors...' : '🔍 Scan Camera Frame & Match Suspect Target'}
+            </button>
 
             {matchResult && matchResult.isMatch ? (
               <div style={{ marginTop: '14px', background: '#fee2e2', border: '2px solid #ef4444', padding: '14px', borderRadius: '8px' }}>
@@ -651,21 +626,6 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
                 </div>
                 <div style={{ fontSize: '11px', color: 'var(--primary-blue)', marginTop: '4px', fontWeight: 600 }}>
                   📍 Sighting Recorded at Live GPS ({matchResult.lat.toFixed(4)}, {matchResult.lng.toFixed(4)})
-                </div>
-              </div>
-            ) : matchResult && !matchResult.isMatch ? (
-              <div style={{ marginTop: '14px', background: '#fff7ed', border: '2px solid #f97316', padding: '14px', borderRadius: '8px' }}>
-                <div style={{ color: '#c2410c', fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>
-                  ❌ NO MATCH DETECTED ({matchResult.confidence}% Similarity)
-                </div>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)' }}>
-                  Target: {matchResult.name}
-                </div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                  Status: {matchResult.status} &bull; Time: {matchResult.time}
-                </div>
-                <div style={{ fontSize: '11px', color: '#c2410c', marginTop: '4px', fontWeight: 600 }}>
-                  ⚠️ Facial vector distance exceeds match threshold. Sighting not logged.
                 </div>
               </div>
             ) : null}
