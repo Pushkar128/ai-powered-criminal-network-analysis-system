@@ -369,10 +369,56 @@ export default function App() {
           {activeTab === 'facial-tab' && (
             <section className="tab-content active">
               <div className="workspace-header">
-                <div className="view-title">
-                  <h2>Facial Scanner & Live GPS Geographical Map</h2>
-                  <span className="sub-title">Laptop Camera Target Recognition & Real-time Sighting Heatmaps</span>
+                <div className="view-title" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  {sidebarCollapsed && (
+                    <button
+                      onClick={() => setSidebarCollapsed(false)}
+                      style={{
+                        background: '#2563eb',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '6px 14px',
+                        borderRadius: '6px',
+                        fontWeight: '700',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        boxShadow: '0 2px 8px rgba(37, 99, 235, 0.4)'
+                      }}
+                      title="Show Sidebar Modules & Filters"
+                    >
+                      <span>⬅️</span> Show Sidebar Controls
+                    </button>
+                  )}
+                  <div>
+                    <h2>Facial Scanner & Live GPS Geographical Map</h2>
+                    <span className="sub-title">Laptop Camera Target Recognition & Real-time Sighting Heatmaps</span>
+                  </div>
                 </div>
+
+                {!sidebarCollapsed && (
+                  <button
+                    onClick={() => setSidebarCollapsed(true)}
+                    style={{
+                      background: '#1e293b',
+                      color: '#38bdf8',
+                      border: '1px solid #334155',
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      fontWeight: '600',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                    title="Expand map to full width by hiding sidebar"
+                  >
+                    <span>⚡</span> Expand Full Map (Hide Sidebar)
+                  </button>
+                )}
               </div>
               <FacialScannerGeoMap nodesData={nodesData} />
             </section>

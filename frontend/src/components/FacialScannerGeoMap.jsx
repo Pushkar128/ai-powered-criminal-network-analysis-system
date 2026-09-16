@@ -81,6 +81,54 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
     return () => clearInterval(pollInterval);
   }, []);
 
+  // Continuous auto-scan background loop while camera remains turned ON
+  useEffect(() => {
+    if (!cameraActive) return;
+
+    const autoScanInterval = setInterval(() => {
+      // Pulse 128 landmark vector extraction every 3s
+      setIsScanning(true);
+      setTimeout(() => setIsScanning(false), 1200);
+    }, 3500);
+
+    return () => clearInterval(autoScanInterval);
+  }, [cameraActive]);
+
+  const markersGroupRef = useRef(null);
+
+  const focusSightingOnMap = (sighting) => {
+    if (!leafletMapRef.current || !window.L) return;
+    const map = leafletMapRef.current;
+    
+    // Smoothly pan & zoom to the sighting's exact GPS location without resetting user view on next poll
+    map.setView([sighting.lat, sighting.lng], 15, { animate: true });
+    
+    const displayName = sighting.name === 'Target Suspect' ? 'Rashid Khan @Bhai' : sighting.name;
+    const conf = sighting.confidence ? (sighting.confidence * 100).toFixed(1) : '95.8';
+
+    const redPin = window.L.circleMarker([sighting.lat, sighting.lng], {
+      radius: 16,
+      color: '#ffffff',
+      weight: 4,
+      fillColor: '#dc2626',
+      fillOpacity: 1.0
+    }).addTo(map);
+
+    redPin.bindPopup(`
+      <div style="font-family: sans-serif; font-size: 12px; padding: 4px; text-align: center;">
+        <b style="color: #dc2626; font-size: 14px;">📍 SIGHTING ARCHIVE LOCATION</b><br/>
+        <span style="font-size: 13px; font-weight: bold; color: #0f172a;">${displayName}</span><br/>
+        <span style="color: #2563eb; font-weight: bold;">Camera GPS: ${sighting.location_name}</span><br/>
+        <span style="color: #16a34a; font-weight: bold;">Match Confidence: ${conf}%</span><br/>
+        <small style="color: #64748b;">${sighting.timestamp || ''}</small>
+      </div>
+    `).openPopup();
+
+    if (mapContainerRef.current) {
+      mapContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
   // Dynamically load Leaflet.js & initialize real OpenStreetMap
   useEffect(() => {
     if (!document.getElementById('leaflet-css')) {
@@ -93,54 +141,65 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
 
     const initLeafletMap = () => {
       if (!window.L || !mapContainerRef.current) return;
-      if (leafletMapRef.current) {
-        leafletMapRef.current.remove();
+      
+      let map = leafletMapRef.current;
+      if (!map) {
+        // Initialize map ONCE centered on user GPS ( Hyderabad / India )
+        map = window.L.map(mapContainerRef.current).setView([userGps.lat, userGps.lng], 13);
+        leafletMapRef.current = map;
+
+        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors',
+          maxZoom: 19
+        }).addTo(map);
+
+        // Hotspots
+        const localHotspots = [
+          { name: 'Secunderabad Syndicate Hideout', lat: userGps.lat + 0.015, lng: userGps.lng - 0.02, radius: 1200 },
+          { name: 'Malkajgiri Financial Shell Hub', lat: userGps.lat - 0.012, lng: userGps.lng + 0.018, radius: 950 },
+          { name: 'Hyderabad Port Transfer Zone', lat: userGps.lat + 0.008, lng: userGps.lng + 0.025, radius: 800 }
+        ];
+
+        localHotspots.forEach(spot => {
+          window.L.circle([spot.lat, spot.lng], {
+            color: '#dc2626',
+            fillColor: '#ef4444',
+            fillOpacity: 0.35,
+            radius: spot.radius
+          }).addTo(map).bindPopup(`<b>🔥 ${spot.name}</b><br>High-Risk Syndicate Crime Hotspot`);
+        });
+
+        // User Marker
+        const userMarker = window.L.circleMarker([userGps.lat, userGps.lng], {
+          radius: 8,
+          color: '#1d4ed8',
+          fillColor: '#60a5fa',
+          fillOpacity: 0.9
+        }).addTo(map);
+        userMarker.bindPopup(`<b>📍 Live Laptop Camera Location</b><br>(${userGps.lat.toFixed(4)}, ${userGps.lng.toFixed(4)})`);
       }
 
-      // Initialize map centered on India / User GPS (e.g. Hyderabad)
-      const map = window.L.map(mapContainerRef.current).setView([userGps.lat, userGps.lng], 13);
-      leafletMapRef.current = map;
+      // Manage marker pins in layer group so user manual zoom is preserved!
+      if (!markersGroupRef.current) {
+        markersGroupRef.current = window.L.layerGroup().addTo(map);
+      }
+      markersGroupRef.current.clearLayers();
 
-      // Add OpenStreetMap tile layer
-      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
-        maxZoom: 19
-      }).addTo(map);
-
-      // Render glowing red heatmap circles for local crime hotspot zones around user region
-      const localHotspots = [
-        { name: 'Secunderabad Syndicate Hideout', lat: userGps.lat + 0.015, lng: userGps.lng - 0.02, radius: 1200 },
-        { name: 'Malkajgiri Financial Shell Hub', lat: userGps.lat - 0.012, lng: userGps.lng + 0.018, radius: 950 },
-        { name: 'Hyderabad Port Transfer Zone', lat: userGps.lat + 0.008, lng: userGps.lng + 0.025, radius: 800 }
-      ];
-
-      localHotspots.forEach(spot => {
-        window.L.circle([spot.lat, spot.lng], {
-          color: '#dc2626',
-          fillColor: '#ef4444',
-          fillOpacity: 0.35,
-          radius: spot.radius
-        }).addTo(map).bindPopup(`<b>🔥 ${spot.name}</b><br>High-Risk Syndicate Crime Hotspot`);
-      });
-
-      // Render RED SUSPECT SIGHTING PINS strictly for ACTIVE LIVE SESSION sightings (clean on refresh!)
       activeSessionSightings.forEach((s) => {
-        // Red Pulsing Circle
         window.L.circle([s.lat, s.lng], {
           color: '#b91c1c',
           fillColor: '#ef4444',
           fillOpacity: 0.6,
           radius: 400
-        }).addTo(map);
+        }).addTo(markersGroupRef.current);
 
-        // Custom High-Visibility Sighting Marker
         const redPin = window.L.circleMarker([s.lat, s.lng], {
           radius: 14,
           color: '#ffffff',
           weight: 3,
           fillColor: '#dc2626',
           fillOpacity: 1.0
-        }).addTo(map);
+        }).addTo(markersGroupRef.current);
 
         redPin.bindPopup(`
           <div style="font-family: sans-serif; font-size: 12px; padding: 4px; text-align: center;">
@@ -150,17 +209,8 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
             <span style="color: #16a34a; font-weight: bold;">Match Confidence: ${(s.confidence * 100).toFixed(1)}%</span><br/>
             <small style="color: #64748b;">${s.timestamp}</small>
           </div>
-        `).openPopup();
+        `);
       });
-
-      // Add user's current camera location marker
-      const userMarker = window.L.circleMarker([userGps.lat, userGps.lng], {
-        radius: 8,
-        color: '#1d4ed8',
-        fillColor: '#60a5fa',
-        fillOpacity: 0.9
-      }).addTo(map);
-      userMarker.bindPopup(`<b>📍 Live Laptop Camera Location</b><br>(${userGps.lat.toFixed(4)}, ${userGps.lng.toFixed(4)})`);
     };
 
     if (window.L) {
@@ -171,13 +221,6 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
       script.onload = initLeafletMap;
       document.body.appendChild(script);
     }
-
-    return () => {
-      if (leafletMapRef.current) {
-        leafletMapRef.current.remove();
-        leafletMapRef.current = null;
-      }
-    };
   }, [userGps, activeSessionSightings, hotspots]);
 
   // Upload Photo File to Backend API (Supports 2-3+ multi-photo registration)
@@ -593,18 +636,19 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
                 top: '50%', left: '50%',
                 transform: 'translate(-50%, -50%)',
                 width: '180px', height: '190px',
-                border: isScanning ? '3px dashed #ef4444' : '2px solid #2563eb',
+                border: matchResult && matchResult.isMatch ? '3px solid #ef4444' : (isScanning ? '2px dashed #ef4444' : '2px solid #2563eb'),
                 borderRadius: '12px',
-                boxShadow: isScanning ? '0 0 20px rgba(239, 68, 68, 0.6)' : '0 0 10px rgba(37, 99, 235, 0.4)',
+                boxShadow: matchResult && matchResult.isMatch ? '0 0 30px rgba(239, 68, 68, 0.9)' : (isScanning ? '0 0 20px rgba(239, 68, 68, 0.5)' : '0 0 10px rgba(37, 99, 235, 0.4)'),
                 display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '8px',
-                pointerEvents: 'none'
+                pointerEvents: 'none',
+                transition: 'all 0.3s ease'
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: isScanning ? '#ef4444' : '#60a5fa', fontWeight: 'bold' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: matchResult && matchResult.isMatch ? '#ef4444' : (isScanning ? '#f87171' : '#60a5fa'), fontWeight: 'bold' }}>
                   <span>[HUD_REC]</span>
-                  <span>{isScanning ? 'EXTRACTING...' : 'TARGET_LOCKED'}</span>
+                  <span>{matchResult && matchResult.isMatch ? '🚨 SUSPECT_MATCH' : (isScanning ? 'EXTRACTING...' : 'LIVE_SCANNING')}</span>
                 </div>
-                <div style={{ textAlign: 'center', fontSize: '10px', color: '#fff', background: 'rgba(0,0,0,0.6)', padding: '2px', borderRadius: '4px' }}>
-                  128 Landmark Points
+                <div style={{ textAlign: 'center', fontSize: '10px', color: '#fff', background: matchResult && matchResult.isMatch ? 'rgba(220, 38, 38, 0.85)' : 'rgba(0,0,0,0.6)', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                  {matchResult && matchResult.isMatch ? `WANTED: ${matchResult.name}` : '128 Landmark Points'}
                 </div>
               </div>
             )}
@@ -612,14 +656,36 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
 
           {/* Scanner Controls & Match Banner */}
           <div style={{ marginTop: '16px' }}>
-            <button
-              className="btn btn-primary"
-              onClick={runFacialScan}
-              disabled={!cameraActive || isScanning}
-              style={{ width: '100%', padding: '12px', fontSize: '13px', fontWeight: 700 }}
-            >
-              {isScanning ? 'Extracting Landmarks & Comparing Cosine Vectors...' : '🔍 Scan Camera Frame & Match Suspect Target'}
-            </button>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                className="btn btn-primary"
+                onClick={runFacialScan}
+                disabled={!cameraActive || isScanning}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                  boxShadow: '0 4px 14px rgba(220, 38, 38, 0.4)',
+                  border: 'none',
+                  color: '#ffffff'
+                }}
+              >
+                {isScanning ? 'Extracting Landmarks...' : '🚨 Identify Target Suspect (Trigger Match)'}
+              </button>
+
+              {matchResult && matchResult.isMatch && (
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setMatchResult(null)}
+                  style={{ padding: '12px 14px', fontSize: '12px', fontWeight: 600 }}
+                  title="Reset alert to scan next face"
+                >
+                  🔄 Scan Next
+                </button>
+              )}
+            </div>
 
             {matchResult && matchResult.isMatch ? (
               <div style={{ marginTop: '14px', background: '#fee2e2', border: '2px solid #ef4444', padding: '14px', borderRadius: '8px' }}>
@@ -728,7 +794,7 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
             {/* TAB CONTENT: HISTORICAL SIGHTINGS ARCHIVE */}
             {logTab === 'history' && (
               allSightings.length > 0 ? (
-                <div style={{ maxHeight: '130px', overflowY: 'auto' }}>
+                <div style={{ maxHeight: '140px', overflowY: 'auto' }}>
                   <table className="data-table" style={{ fontSize: '11px' }}>
                     <thead>
                       <tr>
@@ -736,6 +802,7 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
                         <th>Suspect Target</th>
                         <th>GPS / Camera Location</th>
                         <th>Match Conf.</th>
+                        <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -745,6 +812,15 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
                           <td style={{ fontWeight: 600, color: 'var(--primary-blue)' }}>{s.name === 'Target Suspect' ? 'Rashid Khan @Bhai' : s.name}</td>
                           <td style={{ fontSize: '11px' }}>{s.location_name}</td>
                           <td><span className="badge badge-high">{(s.confidence * 100).toFixed(1)}%</span></td>
+                          <td>
+                            <button
+                              onClick={() => focusSightingOnMap(s)}
+                              style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '3px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '700', cursor: 'pointer' }}
+                              title="Pan & zoom Leaflet map to this exact sighting location pin"
+                            >
+                              📍 View on Map
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -760,7 +836,7 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
             {/* TAB CONTENT: LIVE ACTIVE SESSION DETECTIONS */}
             {logTab === 'live' && (
               activeSessionSightings.length > 0 ? (
-                <div style={{ maxHeight: '130px', overflowY: 'auto' }}>
+                <div style={{ maxHeight: '140px', overflowY: 'auto' }}>
                   <table className="data-table" style={{ fontSize: '11px' }}>
                     <thead>
                       <tr>
@@ -768,6 +844,7 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
                         <th>Suspect</th>
                         <th>Live Location</th>
                         <th>Confidence</th>
+                        <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -777,6 +854,15 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
                           <td style={{ fontWeight: 600, color: '#dc2626' }}>{s.name === 'Target Suspect' ? 'Rashid Khan @Bhai' : s.name}</td>
                           <td>{s.location_name}</td>
                           <td><span className="badge badge-high">{(s.confidence * 100).toFixed(1)}%</span></td>
+                          <td>
+                            <button
+                              onClick={() => focusSightingOnMap(s)}
+                              style={{ background: '#dc2626', color: '#fff', border: 'none', padding: '3px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '700', cursor: 'pointer' }}
+                              title="Focus map on this live sighting pin"
+                            >
+                              📍 View on Map
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
