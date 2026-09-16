@@ -1,0 +1,25 @@
+location_id,location_name,category,source_record
+L001,Abids,zone-1,LOCATION-REG-001
+L002,Ameerpet,zone-2,LOCATION-REG-002
+L003,Banjara Hills,zone-3,LOCATION-REG-003
+L004,Begumpet,zone-4,LOCATION-REG-004
+L005,Boduppal,zone-1,LOCATION-REG-005
+L006,Dilsukhnagar,zone-2,LOCATION-REG-006
+L007,Habsiguda,zone-3,LOCATION-REG-007
+L008,Himayatnagar,zone-4,LOCATION-REG-008
+L009,Jubilee Hills,zone-1,LOCATION-REG-009
+L010,Koti,zone-2,LOCATION-REG-010
+L011,Kukatpally,zone-3,LOCATION-REG-011
+L012,Malkajgiri,zone-4,LOCATION-REG-012
+L013,Mehdipatnam,zone-1,LOCATION-REG-013
+L014,Nacharam,zone-2,LOCATION-REG-014
+L015,Nagole,zone-3,LOCATION-REG-015
+L016,Nallakunta,zone-4,LOCATION-REG-016
+L017,Pocharam,zone-1,LOCATION-REG-017
+L018,Saroornagar,zone-2,LOCATION-REG-018
+L019,Secunderabad,zone-3,LOCATION-REG-019
+L020,Miyapur,zone-4,LOCATION-REG-020
+L021,Tolichowki,zone-1,LOCATION-REG-021
+L022,Kompally,zone-2,LOCATION-REG-022
+L023,Uppal,zone-3,LOCATION-REG-023
+L024,Manikonda,zone-4,LOCATION-REG-024

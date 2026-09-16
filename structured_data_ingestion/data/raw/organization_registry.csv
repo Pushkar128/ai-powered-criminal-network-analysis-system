@@ -1,0 +1,8 @@
+organization_id,organization_name,headquarters_location_id,source_record
+ORG001,Alpha Logistics,L003,ORG-REG-001
+ORG002,Beta Technologies,L009,ORG-REG-002
+ORG003,Delta Services,L011,ORG-REG-003
+ORG004,Epsilon Finance,L018,ORG-REG-004
+ORG005,Gamma Transport,L004,ORG-REG-005
+ORG101,Vertex Traders,L020,ORG-REG-006
+ORG102,Orion Security,L022,ORG-REG-007

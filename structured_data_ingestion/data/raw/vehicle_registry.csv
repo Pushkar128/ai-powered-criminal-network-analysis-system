@@ -1,0 +1,14 @@
+vehicle_id,vehicle_registration,vehicle_model,registered_owner_id,registration_location_id,source_record
+V001,Honda Activa,Honda Activa,P001,L001,VEHICLE-REG-001
+V002,Honda City,Honda City,P002,L004,VEHICLE-REG-002
+V003,Hyundai Creta,Hyundai Creta,P003,L007,VEHICLE-REG-003
+V004,Hyundai Venue,Hyundai Venue,P004,L010,VEHICLE-REG-004
+V005,Hyundai i20,Hyundai i20,P005,L013,VEHICLE-REG-005
+V006,Maruti Baleno,Maruti Baleno,P006,L016,VEHICLE-REG-006
+V007,Maruti Swift,Maruti Swift,P007,L019,VEHICLE-REG-007
+V008,Swift,Swift,P008,L022,VEHICLE-REG-008
+V009,Tata Altroz,Tata Altroz,P009,L001,VEHICLE-REG-009
+V010,Tata Nexon,Tata Nexon,P010,L004,VEHICLE-REG-010
+V101,Kia Seltos,Kia Seltos,P011,L007,VEHICLE-REG-011
+V102,Toyota Glanza,Toyota Glanza,P012,L010,VEHICLE-REG-012
+V103,Mahindra XUV300,Mahindra XUV300,P013,L013,VEHICLE-REG-013
