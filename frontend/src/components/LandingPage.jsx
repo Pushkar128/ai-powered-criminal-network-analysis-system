@@ -7,14 +7,9 @@ export default function LandingPage({ onEnterPortal, onAdminLogin }) {
   const [loginError, setLoginError] = useState('');
 
   const handlePortalClick = (role = 'public') => {
-    // Open main intelligence portal in a new tab as requested
+    // Open main intelligence portal strictly in a new tab so the current tab remains on the Homepage
     const targetUrl = `${window.location.origin}${window.location.pathname}?mode=portal&role=${role}`;
     window.open(targetUrl, '_blank');
-    if (role === 'admin') {
-      onAdminLogin(username.trim());
-    } else {
-      onEnterPortal();
-    }
   };
 
   const handleAdminSubmit = (e) => {
