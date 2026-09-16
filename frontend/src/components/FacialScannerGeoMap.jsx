@@ -487,6 +487,7 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
           <div style={{ display: 'flex', gap: '14px', overflowX: 'auto', paddingTop: '10px', borderTop: '1px dashed var(--border-color)' }}>
             {registeredSuspects.map((s) => {
               const isSelected = selectedTargetId === s.id;
+              const photoSrc = s.preview || (s.photo_url ? (s.photo_url.startsWith('http') ? s.photo_url : `${API_BASE_URL}${s.photo_url}`) : '');
               return (
                 <div
                   key={s.id}
@@ -505,11 +506,18 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
                     transition: 'all 0.2s ease'
                   }}
                 >
-                  <img
-                    src={s.preview || s.photo_url}
-                    alt={s.name}
-                    style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${isSelected ? 'var(--primary-blue)' : '#cbd5e1'}` }}
-                  />
+                  {photoSrc ? (
+                    <img
+                      src={photoSrc}
+                      alt={s.name}
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                      style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${isSelected ? 'var(--primary-blue)' : '#cbd5e1'}` }}
+                    />
+                  ) : (
+                    <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: '#3b82f6', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                      {s.name ? s.name.charAt(0).toUpperCase() : 'S'}
+                    </div>
+                  )}
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '13px', fontWeight: 'bold', color: isSelected ? 'var(--primary-blue)' : 'var(--text-main)' }}>
                       {s.name} {isSelected && <span style={{ fontSize: '10px', background: 'var(--primary-blue)', color: '#fff', padding: '1px 5px', borderRadius: '4px', marginLeft: '4px' }}>Active Target</span>}

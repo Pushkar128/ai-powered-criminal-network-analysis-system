@@ -47,6 +47,7 @@ export default function App() {
 
   const [view, setView] = useState(initialView); // 'landing' | 'main'
   const [userRole, setUserRole] = useState(initialRole); // 'public' | 'admin'
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState('graph-tab');
   const [nodesData, setNodesData] = useState(INITIAL_NODES);
   const [edgesData, setEdgesData] = useState(INITIAL_EDGES);
@@ -214,7 +215,7 @@ export default function App() {
       />
 
       <div className="main-body">
-        <aside className="sidebar">
+        <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
           <div className="sidebar-section">
             <h3>Intelligence Modules</h3>
             <div className="module-nav">
@@ -293,10 +294,56 @@ export default function App() {
           {activeTab === 'graph-tab' && (
             <section className="tab-content active">
               <div className="workspace-header">
-                <div className="view-title">
-                  <h2>National Criminal Network Topology Canvas</h2>
-                  <span className="sub-title">Interactive Risk-Weighted Association & Syndicate Mapping</span>
+                <div className="view-title" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  {sidebarCollapsed && (
+                    <button
+                      onClick={() => setSidebarCollapsed(false)}
+                      style={{
+                        background: '#2563eb',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '6px 14px',
+                        borderRadius: '6px',
+                        fontWeight: '700',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        boxShadow: '0 2px 8px rgba(37, 99, 235, 0.4)'
+                      }}
+                      title="Show Sidebar Modules & Filters"
+                    >
+                      <span>⬅️</span> Show Sidebar Controls
+                    </button>
+                  )}
+                  <div>
+                    <h2>National Criminal Network Topology Canvas</h2>
+                    <span className="sub-title">Interactive Risk-Weighted Association & Syndicate Mapping</span>
+                  </div>
                 </div>
+
+                {!sidebarCollapsed && (
+                  <button
+                    onClick={() => setSidebarCollapsed(true)}
+                    style={{
+                      background: '#1e293b',
+                      color: '#38bdf8',
+                      border: '1px solid #334155',
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      fontWeight: '600',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                    title="Expand canvas to full width by hiding sidebar"
+                  >
+                    <span>⚡</span> Expand Full Canvas (Hide Sidebar)
+                  </button>
+                )}
               </div>
 
               {/* Live News Ingestion Panel */}
