@@ -30,7 +30,7 @@ def save_suspect_photo(file_bytes: bytes, original_filename: str, suspect_name: 
         f.write(file_bytes)
         
     suspect_id = f"PER_FACE_{int(time.time())}"
-    photo_url = f"http://127.0.0.1:8000/uploads/suspects/{unique_filename}"
+    photo_url = f"/uploads/suspects/{unique_filename}"
     
     suspect_entry = {
         "id": suspect_id,
@@ -54,6 +54,11 @@ def save_suspect_photo(file_bytes: bytes, original_filename: str, suspect_name: 
     )
     
     return suspect_entry
+
+
+def get_registered_suspects():
+    """Returns list of currently registered suspect face targets."""
+    return SUSPECT_FACES
 
 
 def delete_suspect_photo(suspect_id: str):

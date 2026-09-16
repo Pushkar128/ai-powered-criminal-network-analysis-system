@@ -54,8 +54,21 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
   };
 
 
+  const fetchRegisteredSuspects = () => {
+    fetch(`${API_BASE_URL}/api/surveillance/registered-suspects`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.suspects && data.suspects.length > 0) {
+          setRegisteredSuspects(data.suspects);
+          setSelectedTargetId(prev => prev || data.suspects[0].id);
+        }
+      })
+      .catch(() => {});
+  };
+
   useEffect(() => {
     fetchHeatmap();
+    fetchRegisteredSuspects();
     const pollInterval = setInterval(fetchHeatmap, 3000); // Poll every 3s
 
     if (navigator.geolocation) {

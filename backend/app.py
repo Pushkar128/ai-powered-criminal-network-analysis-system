@@ -326,7 +326,16 @@ def clear_active_pins():
 
 
 
-from backend.facial_geo_service import save_suspect_photo, delete_suspect_photo
+from backend.facial_geo_service import save_suspect_photo, delete_suspect_photo, get_registered_suspects
+
+@app.get("/api/surveillance/registered-suspects")
+def list_registered_suspects():
+    """Returns list of registered target suspects stored on backend disk."""
+    try:
+        return {"suspects": get_registered_suspects()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fetching registered suspects failed: {str(e)}")
+
 
 @app.post("/api/surveillance/upload-photo")
 async def upload_suspect_photo(
