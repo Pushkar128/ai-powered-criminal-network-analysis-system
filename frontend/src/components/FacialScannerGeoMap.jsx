@@ -346,8 +346,19 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
 
           fetchHeatmap();
         } catch (e) {}
+      const formatTime = (ts) => {
+    if (!ts) return '';
+    try {
+      if (ts.includes('-') && !ts.includes('T') && !ts.includes('Z')) {
+        const utcDate = new Date(ts.replace(' ', 'T') + 'Z');
+        if (!isNaN(utcDate.getTime())) {
+          return utcDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+        }
       }
-    }, 1500);
+      return ts;
+    } catch (e) {
+      return ts;
+    }
   };
 
   return (
@@ -374,7 +385,7 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
                 NATIONWIDE REMOTE CHECKPOINT SIGHTING ALERT!
               </div>
               <div style={{ fontSize: '13px', color: '#fef2f2' }}>
-                Suspect <b>{remoteAlert.name}</b> was just detected by a remote camera at <b>{remoteAlert.location_name}</b> (Confidence: {(remoteAlert.confidence * 100).toFixed(1)}%)
+                Suspect <b>{remoteAlert.name === 'Target Suspect' ? 'Rashid Khan @Bhai' : remoteAlert.name}</b> was just detected by a remote camera at <b>{remoteAlert.location_name}</b> (Confidence: {(remoteAlert.confidence * 100).toFixed(1)}%)
               </div>
             </div>
           </div>
@@ -384,7 +395,6 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
 
       {/* SECTION 1: UPLOAD TARGET SUSPECT FACE PHOTO (Supports multiple suspect registrations) */}
       <div className="glass-card" style={{ margin: '0 0 24px 0', padding: '18px 24px' }}>
-
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap', marginBottom: registeredSuspects.length > 0 ? '16px' : '0' }}>
           <div>
             <h3 style={{ fontSize: '15px', color: 'var(--primary-navy)' }}>
@@ -693,8 +703,8 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
                     <tbody>
                       {allSightings.map((s, i) => (
                         <tr key={i}>
-                          <td style={{ fontSize: '11px', color: '#475569' }}>{s.timestamp}</td>
-                          <td style={{ fontWeight: 600, color: 'var(--primary-blue)' }}>{s.name}</td>
+                          <td style={{ fontSize: '11px', color: '#475569' }}>{formatTime(s.timestamp)}</td>
+                          <td style={{ fontWeight: 600, color: 'var(--primary-blue)' }}>{s.name === 'Target Suspect' ? 'Rashid Khan @Bhai' : s.name}</td>
                           <td style={{ fontSize: '11px' }}>{s.location_name}</td>
                           <td><span className="badge badge-high">{(s.confidence * 100).toFixed(1)}%</span></td>
                         </tr>
@@ -725,8 +735,8 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
                     <tbody>
                       {activeSessionSightings.map((s, i) => (
                         <tr key={i}>
-                          <td>{s.timestamp}</td>
-                          <td style={{ fontWeight: 600, color: '#dc2626' }}>{s.name}</td>
+                          <td>{formatTime(s.timestamp)}</td>
+                          <td style={{ fontWeight: 600, color: '#dc2626' }}>{s.name === 'Target Suspect' ? 'Rashid Khan @Bhai' : s.name}</td>
                           <td>{s.location_name}</td>
                           <td><span className="badge badge-high">{(s.confidence * 100).toFixed(1)}%</span></td>
                         </tr>
@@ -749,4 +759,5 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
     </div>
   );
 }
+
 
