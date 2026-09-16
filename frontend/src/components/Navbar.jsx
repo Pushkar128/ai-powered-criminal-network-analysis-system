@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function Navbar({ nodesData, onSelectNode, isApiConnected, onOpenUpload, onOpenAudit }) {
+export default function Navbar({ nodesData, onSelectNode, isApiConnected, onOpenUpload, onOpenAudit, userRole, onGoHome }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -20,7 +20,7 @@ export default function Navbar({ nodesData, onSelectNode, isApiConnected, onOpen
 
   return (
     <header className="top-nav">
-      <div className="brand">
+      <div className="brand" style={{ cursor: 'pointer' }} onClick={onGoHome} title="Return to Landing Page">
         <div className="logo-badge">
           <svg viewBox="0 0 24 24" className="logo-icon"><path fill="currentColor" d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-5.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.54-3.14 8.78-7 9.82-3.86-1.04-7-5.28-7-9.82V6.3l7-3.12zM12 7a5 5 0 100 10 5 5 0 000-10zm0 2a3 3 0 110 6 3 3 0 010-6z"/></svg>
         </div>
@@ -66,6 +66,16 @@ export default function Navbar({ nodesData, onSelectNode, isApiConnected, onOpen
       </div>
 
       <div className="header-status">
+        {userRole === 'admin' && (
+          <span style={{ background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 800 }}>
+            🛡️ Senior Command Admin
+          </span>
+        )}
+
+        <button className="btn btn-secondary" onClick={onGoHome} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', fontSize: '12px' }}>
+          <span>🏠</span> Home
+        </button>
+
         <button className="btn btn-primary" onClick={onOpenUpload} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span>📂</span> Live Evidence Upload
         </button>
@@ -81,3 +91,4 @@ export default function Navbar({ nodesData, onSelectNode, isApiConnected, onOpen
     </header>
   );
 }
+

@@ -9,6 +9,7 @@ import KingpinAnalytics from './components/KingpinAnalytics';
 import EvidenceUploadModal from './components/EvidenceUploadModal';
 import ChainOfCustodyAudit from './components/ChainOfCustodyAudit';
 import FacialScannerGeoMap from './components/FacialScannerGeoMap';
+import LandingPage from './components/LandingPage';
 import { API_BASE_URL } from './config';
 
 // INITIAL_NODES & EDGES...
@@ -40,6 +41,8 @@ const INITIAL_EDGES = [
 ];
 
 export default function App() {
+  const [view, setView] = useState('landing'); // 'landing' | 'main'
+  const [userRole, setUserRole] = useState('public'); // 'public' | 'admin'
   const [activeTab, setActiveTab] = useState('graph-tab');
   const [nodesData, setNodesData] = useState(INITIAL_NODES);
   const [edgesData, setEdgesData] = useState(INITIAL_EDGES);
@@ -52,6 +55,10 @@ export default function App() {
   
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [auditModalOpen, setAuditModalOpen] = useState(false);
+
+  // Global Admin Alert state for real-time suspect detection
+  const [globalAdminAlert, setGlobalAdminAlert] = useState(null);
+  const prevAdminSightingsCount = React.useRef(0);
 
   const fetchGraphData = (caseId = selectedCase) => {
     const url = caseId && caseId !== 'ALL' 
@@ -82,14 +89,121 @@ export default function App() {
     fetchCases();
   }, [selectedCase]);
 
+  // Global polling for Admin live suspect alert notifications
+  useEffect(() => {
+    if (userRole !== 'admin') return;
+
+    const checkAdminSightings = () => {
+      fetch(`${API_BASE_URL}/api/surveillance/heatmap`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.sightings) {
+            if (prevAdminSightingsCount.current > 0 && data.sightings.length > prevAdminSightingsCount.current) {
+              const latest = data.sightings[0];
+              setGlobalAdminAlert(latest);
+              setTimeout(() => setGlobalAdminAlert(null), 8000);
+            }
+            prevAdminSightingsCount.current = data.sightings.length;
+          }
+        })
+        .catch(() => {});
+    };
+
+    checkAdminSightings();
+    const interval = setInterval(checkAdminSightings, 3000);
+    return () => clearInterval(interval);
+  }, [userRole]);
+
+  // Handle entering portal as free public user
+  const handleEnterPortal = () => {
+    setUserRole('public');
+    setView('main');
+  };
+
+  // Handle admin sign in
+  const handleAdminLogin = (username) => {
+    setUserRole('admin');
+    setView('main');
+  };
+
+  if (view === 'landing') {
+    return (
+      <LandingPage
+        onEnterPortal={handleEnterPortal}
+        onAdminLogin={handleAdminLogin}
+      />
+    );
+  }
+
   return (
     <div className="app-container">
+      {/* GLOBAL ADMIN ALERT TOAST (Visible across all tabs when logged in as Admin) */}
+      {userRole === 'admin' && globalAdminAlert && (
+        <div style={{
+          position: 'fixed',
+          top: '70px',
+          right: '24px',
+          zIndex: 99999,
+          background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
+          color: '#ffffff',
+          padding: '16px 20px',
+          borderRadius: '12px',
+          boxShadow: '0 10px 30px rgba(220, 38, 38, 0.5)',
+          border: '2px solid #fca5a5',
+          maxWidth: '420px',
+          animation: 'bounce 0.5s ease'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
+            <div style={{ fontSize: '14px', fontWeight: '800', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>🚨 ADMIN CRITICAL ALERT: SUSPECT DETECTED</span>
+            </div>
+            <button
+              onClick={() => setGlobalAdminAlert(null)}
+              style={{ background: 'none', border: 'none', color: '#fff', fontSize: '16px', cursor: 'pointer', lineHeight: 1 }}
+            >
+              ✕
+            </button>
+          </div>
+          <div style={{ fontSize: '13px', fontWeight: '700', marginBottom: '4px' }}>
+            Target: {globalAdminAlert.name === 'Target Suspect' ? 'Rashid Khan @Bhai' : globalAdminAlert.name}
+          </div>
+          <div style={{ fontSize: '12px', color: '#fee2e2' }}>
+            Location: {globalAdminAlert.location_name}
+          </div>
+          <div style={{ fontSize: '11px', color: '#fef2f2', marginTop: '6px', fontWeight: 600 }}>
+            Confidence: {(globalAdminAlert.confidence * 100).toFixed(1)}% &bull; Live GPS Sync Active
+          </div>
+          <button
+            onClick={() => {
+              setActiveTab('facial-tab');
+              setGlobalAdminAlert(null);
+            }}
+            style={{
+              marginTop: '10px',
+              width: '100%',
+              background: '#ffffff',
+              color: '#dc2626',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              fontWeight: '800',
+              fontSize: '12px',
+              cursor: 'pointer'
+            }}
+          >
+            🗺️ View Real-time OpenStreetMap & Live Pin ➔
+          </button>
+        </div>
+      )}
+
       <Navbar
         nodesData={nodesData}
         onSelectNode={(node) => setSelectedNode(node)}
         isApiConnected={isApiConnected}
         onOpenUpload={() => setUploadModalOpen(true)}
         onOpenAudit={() => setAuditModalOpen(true)}
+        userRole={userRole}
+        onGoHome={() => setView('landing')}
       />
 
       <div className="main-body">
