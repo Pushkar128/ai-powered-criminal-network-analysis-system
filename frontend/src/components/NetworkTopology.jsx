@@ -9,7 +9,7 @@ export default function NetworkTopology({ nodesData, edgesData, selectedNode, on
   const [lastMouse, setLastMouse] = useState({ x: 0, y: 0 });
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
 
-  // Dynamically assign organized concentric spherical ring coordinates to nodes
+  // Dynamically assign organized, spacious concentric ring coordinates to nodes
   useEffect(() => {
     if (!nodesData || nodesData.length === 0) return;
     const center = { x: 300, y: 220 };
@@ -34,33 +34,40 @@ export default function NetworkTopology({ nodesData, edgesData, selectedNode, on
       }
     });
 
-    // Place Ring 0 (Center Hub - Radius 75)
+    // Dynamic radius expansion based on node count to eliminate congestion
+    const minSeparation = 48; // Space between adjacent node centers
+    const r0 = Math.max(90, (ring0.length * minSeparation) / (2 * Math.PI));
+    const r1 = Math.max(r0 + 140, (ring1.length * minSeparation) / (2 * Math.PI));
+    const r2 = Math.max(r1 + 140, (ring2.length * minSeparation) / (2 * Math.PI));
+    const r3 = Math.max(r2 + 140, (ring3.length * minSeparation) / (2 * Math.PI));
+
+    // Place Ring 0 (Center Hub)
     ring0.forEach((node, i) => {
       const angle = (i / Math.max(1, ring0.length)) * 2 * Math.PI - Math.PI / 2;
-      const r = ring0.length === 1 ? 0 : 75;
+      const r = ring0.length === 1 ? 0 : r0;
       node.x = center.x + r * Math.cos(angle);
       node.y = center.y + r * Math.sin(angle);
     });
 
-    // Place Ring 1 (Radius 165)
+    // Place Ring 1
     ring1.forEach((node, i) => {
       const angle = (i / Math.max(1, ring1.length)) * 2 * Math.PI - Math.PI / 2 + 0.3;
-      node.x = center.x + 165 * Math.cos(angle);
-      node.y = center.y + 165 * Math.sin(angle);
+      node.x = center.x + r1 * Math.cos(angle);
+      node.y = center.y + r1 * Math.sin(angle);
     });
 
-    // Place Ring 2 (Radius 255)
+    // Place Ring 2
     ring2.forEach((node, i) => {
       const angle = (i / Math.max(1, ring2.length)) * 2 * Math.PI - Math.PI / 2 + 0.5;
-      node.x = center.x + 255 * Math.cos(angle);
-      node.y = center.y + 255 * Math.sin(angle);
+      node.x = center.x + r2 * Math.cos(angle);
+      node.y = center.y + r2 * Math.sin(angle);
     });
 
-    // Place Ring 3 (Radius 340)
+    // Place Ring 3
     ring3.forEach((node, i) => {
       const angle = (i / Math.max(1, ring3.length)) * 2 * Math.PI - Math.PI / 2 + 0.2;
-      node.x = center.x + 340 * Math.cos(angle);
-      node.y = center.y + 340 * Math.sin(angle);
+      node.x = center.x + r3 * Math.cos(angle);
+      node.y = center.y + r3 * Math.sin(angle);
     });
   }, [nodesData]);
 
@@ -74,6 +81,30 @@ export default function NetworkTopology({ nodesData, edgesData, selectedNode, on
     if (rawType.includes('NEWS') || rawType.includes('EVENT')) return '#e11d48'; // Rose
     return '#0284c7';
   };
+
+  // Subgraph isolation: when selectedNode is active, show target + direct (1-hop) & indirect (2-hop) connections
+  const activeNetworkIds = React.useMemo(() => {
+    if (!selectedNode) return null;
+
+    const direct1Hop = new Set();
+    (edgesData || []).forEach(e => {
+      if (e.source === selectedNode.id) direct1Hop.add(e.target);
+      if (e.target === selectedNode.id) direct1Hop.add(e.source);
+    });
+
+    const indirect2Hop = new Set();
+    (edgesData || []).forEach(e => {
+      if (direct1Hop.has(e.source) && e.target !== selectedNode.id) indirect2Hop.add(e.target);
+      if (direct1Hop.has(e.target) && e.source !== selectedNode.id) indirect2Hop.add(e.source);
+    });
+
+    return {
+      targetId: selectedNode.id,
+      directIds: direct1Hop,
+      indirectIds: indirect2Hop,
+      allNetworkIds: new Set([selectedNode.id, ...direct1Hop, ...indirect2Hop])
+    };
+  }, [selectedNode, edgesData]);
 
   const filteredNodes = (nodesData || []).filter(node => {
     const rawType = (node.type || node.label || '').toUpperCase();
@@ -91,7 +122,9 @@ export default function NetworkTopology({ nodesData, edgesData, selectedNode, on
     }
 
     const threatMatch = (node.threat_score || node.degree || 0) >= threatFilter;
-    return typeMatch && threatMatch;
+    const isNetworkMatch = !activeNetworkIds || activeNetworkIds.allNetworkIds.has(node.id);
+
+    return typeMatch && threatMatch && isNetworkMatch;
   });
 
   // Canvas Sizing & Layout Measuring
@@ -342,6 +375,50 @@ export default function NetworkTopology({ nodesData, edgesData, selectedNode, on
 
   return (
     <div className="canvas-container" style={{ position: 'relative', width: '100%', height: '540px', minHeight: '400px' }}>
+      {activeNetworkIds && (
+        <div style={{
+          position: 'absolute',
+          top: '12px',
+          left: '12px',
+          zIndex: 10,
+          background: 'rgba(15, 23, 42, 0.92)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid #38bdf8',
+          borderRadius: '8px',
+          padding: '8px 14px',
+          color: '#ffffff',
+          fontSize: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          boxShadow: '0 4px 14px rgba(56, 189, 248, 0.3)'
+        }}>
+          <div>
+            <span style={{ fontWeight: 800, color: '#38bdf8' }}>🔍 TARGET SUBGRAPH ISOLATED VIEW</span>
+            <div style={{ fontSize: '11px', color: '#cbd5e1', marginTop: '2px' }}>
+              Showing target <b>{selectedNode.name || selectedNode.id}</b> + <b>{activeNetworkIds.directIds.size} Direct</b> & <b>{activeNetworkIds.indirectIds.size} Indirect</b> Connections ({filteredNodes.length} nodes)
+            </div>
+          </div>
+          <button
+            onClick={() => onSelectNode(null)}
+            style={{
+              background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
+              color: '#ffffff',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              fontSize: '11px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
+            }}
+            title="Clear target filter & show full 137-node dataset"
+          >
+            ✖ Show Full Graph
+          </button>
+        </div>
+      )}
+
       <canvas
         ref={canvasRef}
         id="network-canvas"
@@ -353,7 +430,7 @@ export default function NetworkTopology({ nodesData, edgesData, selectedNode, on
       <div className="canvas-controls">
         <button onClick={() => setScale(s => s * 1.2)} title="Zoom In">+</button>
         <button onClick={() => setScale(s => s * 0.8)} title="Zoom Out">-</button>
-        <button onClick={() => { setScale(0.9); setPan({ x: 0, y: 0 }); }} title="Reset Pan & Zoom">🎯</button>
+        <button onClick={() => { setScale(0.7); setPan({ x: 0, y: 0 }); }} title="Reset Pan & Zoom">🎯</button>
         <button 
           onClick={() => {
             if (!document.fullscreenElement) {
