@@ -6,6 +6,7 @@ export default function NewsIngestionPanel({ onRefreshGraph, currentCase, onSele
   const [ingestionResults, setIngestionResults] = useState(null);
   const [newsFeed, setNewsFeed] = useState([]);
   const [collapsed, setCollapsed] = useState(false);
+  const [showQuickInput, setShowQuickInput] = useState(false);
   const [quickText, setQuickText] = useState('');
   const [updatingText, setUpdatingText] = useState(false);
   const [updateStatus, setUpdateStatus] = useState('');
@@ -31,13 +32,13 @@ export default function NewsIngestionPanel({ onRefreshGraph, currentCase, onSele
       } else if (onRefreshGraph) {
         onRefreshGraph();
       }
-      setUpdateStatus(`✓ Network updated: Extracted intelligence from "${quickText}"`);
+      setUpdateStatus(`✓ Case network updated: Extracted intelligence from "${quickText}"`);
       setQuickText('');
     } catch (err) {
       if (onQuickUpdateGraph) {
         onQuickUpdateGraph([], [], quickText);
       }
-      setUpdateStatus(`✓ Network updated (offline mode): "${quickText}"`);
+      setUpdateStatus(`✓ Case network updated (offline mode): "${quickText}"`);
       setQuickText('');
     } finally {
       setUpdatingText(false);
@@ -71,33 +72,104 @@ export default function NewsIngestionPanel({ onRefreshGraph, currentCase, onSele
 
   if (collapsed) {
     return (
-      <div style={{ padding: '10px 16px', background: '#0f172a', borderRadius: '10px', border: '1px solid #1e293b', color: '#f8fafc', margin: '12px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ color: '#38bdf8', fontWeight: 700, fontSize: '0.9rem' }}>📡 OSINT Live News Feed & Case Filter</span>
-          <select
-            value={currentCase || 'ALL'}
-            onChange={(e) => onSelectCase(e.target.value)}
-            style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '4px 10px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}
+      <div style={{ padding: '10px 16px', background: '#0f172a', borderRadius: '10px', border: '1px solid #1e293b', color: '#f8fafc', margin: '12px 0' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <span style={{ color: '#38bdf8', fontWeight: 700, fontSize: '0.9rem' }}>📡 OSINT Live News Feed & Case Filter</span>
+            <select
+              value={currentCase || 'ALL'}
+              onChange={(e) => onSelectCase(e.target.value)}
+              style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '4px 10px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}
+            >
+              <option value="ALL">🌐 All Cases Combined Network</option>
+              <optgroup label="📁 Synthetic Benchmark Cases [Dataset]">
+                {casesList && casesList.filter(c => c.is_dataset || (c.title && c.title.includes('[Dataset]'))).map((c) => (
+                  <option key={c.case_id} value={c.case_id}>{c.title} ({c.node_count} Nodes)</option>
+                ))}
+              </optgroup>
+              <optgroup label="📰 OSINT Live News Feed Cases">
+                {casesList && casesList.filter(c => !c.is_dataset && (!c.title || !c.title.includes('[Dataset]'))).map((c) => (
+                  <option key={c.case_id} value={c.case_id}>{c.title} ({c.node_count} Nodes)</option>
+                ))}
+              </optgroup>
+            </select>
+
+            <button
+              type="button"
+              onClick={() => setShowQuickInput(prev => !prev)}
+              style={{
+                background: showQuickInput ? '#2563eb' : '#1e293b',
+                color: '#38bdf8',
+                border: '1px solid #334155',
+                padding: '4px 10px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+              title="Click to open text update input for this active case"
+            >
+              <span>✏️</span> {showQuickInput ? 'Close Text Input' : 'Add Case Update'}
+            </button>
+          </div>
+          <button
+            onClick={() => setCollapsed(false)}
+            style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '4px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
           >
-            <option value="ALL">🌐 All Cases Combined Network</option>
-            <optgroup label="📁 Synthetic Benchmark Cases [Dataset]">
-              {casesList && casesList.filter(c => c.is_dataset || (c.title && c.title.includes('[Dataset]'))).map((c) => (
-                <option key={c.case_id} value={c.case_id}>{c.title} ({c.node_count} Nodes)</option>
-              ))}
-            </optgroup>
-            <optgroup label="📰 OSINT Live News Feed Cases">
-              {casesList && casesList.filter(c => !c.is_dataset && (!c.title || !c.title.includes('[Dataset]'))).map((c) => (
-                <option key={c.case_id} value={c.case_id}>{c.title} ({c.node_count} Nodes)</option>
-              ))}
-            </optgroup>
-          </select>
+            ▼ Expand News Panel
+          </button>
         </div>
-        <button
-          onClick={() => setCollapsed(false)}
-          style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '4px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
-        >
-          ▼ Expand News Panel
-        </button>
+
+        {/* Collapsed Mode Quick Text Input */}
+        {showQuickInput && (
+          <form onSubmit={handleQuickSubmit} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#1e293b', padding: '10px 14px', borderRadius: '8px', marginTop: '10px', border: '1px solid #38bdf840' }}>
+            <span style={{ fontSize: '0.9rem' }}>✏️</span>
+            <input
+              type="text"
+              value={quickText}
+              onChange={(e) => setQuickText(e.target.value)}
+              placeholder={`Type update for active case (e.g. "Rashid has recently contacted John")`}
+              style={{
+                flex: 1,
+                background: '#0f172a',
+                color: '#38bdf8',
+                border: '1px solid #334155',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '0.85rem',
+                fontWeight: '500',
+                outline: 'none'
+              }}
+              autoFocus
+            />
+            <button
+              type="submit"
+              disabled={updatingText || !quickText.trim()}
+              style={{
+                background: updatingText ? '#475569' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color: '#ffffff',
+                border: 'none',
+                padding: '6px 14px',
+                borderRadius: '6px',
+                fontWeight: '700',
+                fontSize: '0.8rem',
+                cursor: updatingText || !quickText.trim() ? 'not-allowed' : 'pointer',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {updatingText ? '⏳ Appending...' : '⚡ Append to Case Network'}
+            </button>
+          </form>
+        )}
+
+        {updateStatus && (
+          <div style={{ background: '#10b98120', border: '1px solid #10b98150', color: '#6ee7b7', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600, marginTop: '8px' }}>
+            {updateStatus}
+          </div>
+        )}
       </div>
     );
   }
@@ -143,7 +215,7 @@ export default function NewsIngestionPanel({ onRefreshGraph, currentCase, onSele
       </div>
 
 
-      {/* Case Selector Dropdown */}
+      {/* Case Selector Dropdown & Icon Button for Quick Text Ingestion */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#1e293b', padding: '10px 14px', borderRadius: '8px', marginBottom: '12px' }}>
         <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#cbd5e1' }}>📁 Active Case Filter:</label>
         <select
@@ -177,47 +249,73 @@ export default function NewsIngestionPanel({ onRefreshGraph, currentCase, onSele
             ))}
           </optgroup>
         </select>
-      </div>
 
-      {/* Quick Text Case Ingestion Input */}
-      <form onSubmit={handleQuickSubmit} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#1e293b', padding: '10px 14px', borderRadius: '8px', marginBottom: '12px' }}>
-        <span style={{ fontSize: '0.9rem' }}>✏️</span>
-        <input
-          type="text"
-          value={quickText}
-          onChange={(e) => setQuickText(e.target.value)}
-          placeholder='Type case update (e.g. "Rashid has recently contacted John")'
+        {/* Small Icon Button to Toggle Text Input for Active Case */}
+        <button
+          type="button"
+          onClick={() => setShowQuickInput(prev => !prev)}
           style={{
-            flex: 1,
-            background: '#0f172a',
+            background: showQuickInput ? '#2563eb' : '#0f172a',
             color: '#38bdf8',
             border: '1px solid #334155',
             padding: '6px 12px',
             borderRadius: '6px',
+            cursor: 'pointer',
             fontSize: '0.85rem',
-            fontWeight: '500',
-            outline: 'none'
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.2s'
           }}
-        />
-        <button
-          type="submit"
-          disabled={updatingText || !quickText.trim()}
-          style={{
-            background: updatingText ? '#475569' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            color: '#ffffff',
-            border: 'none',
-            padding: '6px 14px',
-            borderRadius: '6px',
-            fontWeight: '700',
-            fontSize: '0.8rem',
-            cursor: updatingText || !quickText.trim() ? 'not-allowed' : 'pointer',
-            boxShadow: '0 2px 8px rgba(16, 185, 129, 0.4)',
-            whiteSpace: 'nowrap'
-          }}
+          title="Click to open text update label for this case"
         >
-          {updatingText ? '⏳ Appending...' : '⚡ Append to Case Network'}
+          <span>✏️</span> {showQuickInput ? 'Close Text Input' : 'Add Case Update'}
         </button>
-      </form>
+      </div>
+
+      {/* Expanded Mode Quick Text Input Form */}
+      {showQuickInput && (
+        <form onSubmit={handleQuickSubmit} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#1e293b', padding: '12px 14px', borderRadius: '8px', marginBottom: '12px', border: '1px solid #38bdf840' }}>
+          <span style={{ fontSize: '0.9rem' }}>✏️</span>
+          <input
+            type="text"
+            value={quickText}
+            onChange={(e) => setQuickText(e.target.value)}
+            placeholder={`Type update for active case (e.g. "Rashid has recently contacted John")`}
+            style={{
+              flex: 1,
+              background: '#0f172a',
+              color: '#38bdf8',
+              border: '1px solid #334155',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              fontSize: '0.85rem',
+              fontWeight: '500',
+              outline: 'none'
+            }}
+            autoFocus
+          />
+          <button
+            type="submit"
+            disabled={updatingText || !quickText.trim()}
+            style={{
+              background: updatingText ? '#475569' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              color: '#ffffff',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              fontWeight: '700',
+              fontSize: '0.8rem',
+              cursor: updatingText || !quickText.trim() ? 'not-allowed' : 'pointer',
+              boxShadow: '0 2px 8px rgba(16, 185, 129, 0.4)',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {updatingText ? '⏳ Appending...' : '⚡ Append to Case Network'}
+          </button>
+        </form>
+      )}
 
       {updateStatus && (
         <div style={{ background: '#10b98120', border: '1px solid #10b98150', color: '#6ee7b7', padding: '8px 12px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600, marginBottom: '12px' }}>

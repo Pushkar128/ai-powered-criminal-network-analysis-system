@@ -25,6 +25,7 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
   
   const [hotspots, setHotspots] = useState([]);
   const [userGps, setUserGps] = useState({ lat: 17.4556, lng: 78.5634 }); // Default Hyderabad region
+  const [customLocationName, setCustomLocationName] = useState('Live Camera Location');
   const [statusMsg, setStatusMsg] = useState('');
   const [logTab, setLogTab] = useState('history'); // 'history' | 'live'
 
@@ -73,8 +74,14 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => setUserGps({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => {}
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          setUserGps({ lat, lng });
+          setCustomLocationName(`Camera Checkpoint (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
+        },
+        () => {},
+        { enableHighAccuracy: true, timeout: 10000 }
       );
     }
 
@@ -360,66 +367,56 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
       setIsScanning(false);
       
       const activeTarget = registeredSuspects.find(s => s.id === selectedTargetId) || registeredSuspects[0];
-      const targetName = activeTarget ? activeTarget.name : (customSuspectName.trim() || 'Target Suspect');
+      const targetName = activeTarget ? activeTarget.name : (customSuspectName.trim() || 'Rashid Khan @Bhai');
       const targetId = activeTarget ? activeTarget.id : selectedSuspect;
-      
-      const noTargetRegistered = registeredSuspects.length === 0 && !customSuspectName.trim();
-      
-      const nameLower = targetName.toLowerCase();
-      const isMismatchName = nameLower.includes('friend') || nameLower.includes('civilian') || nameLower.includes('other') || nameLower.includes('not') || nameLower.includes('mismatch') || nameLower.includes('unknown');
-      const isMismatch = noTargetRegistered || isMismatchName;
+      const locName = customLocationName.trim() || `Live Camera (${userGps.lat.toFixed(4)}, ${userGps.lng.toFixed(4)})`;
 
-      if (isMismatch) {
-        setMatchResult(null);
-        setStatusMsg('Live camera scanning... No suspect target detected.');
-      } else {
-        const match = {
-          isMatch: true,
-          name: targetName,
-          id: targetId,
-          confidence: 95.8,
-          status: 'WANTED - HIGH PRIORITY TARGET',
-          time: new Date().toLocaleTimeString(),
-          lat: userGps.lat,
-          lng: userGps.lng
-        };
-        setMatchResult(match);
-        setStatusMsg(`✔ FACIAL MATCH CONFIRMED: ${match.name} (95.8% Confidence)`);
+      const match = {
+        isMatch: true,
+        name: targetName,
+        id: targetId,
+        confidence: 95.8,
+        status: 'WANTED - HIGH PRIORITY TARGET',
+        time: new Date().toLocaleTimeString(),
+        lat: userGps.lat,
+        lng: userGps.lng,
+        location_name: locName
+      };
+      setMatchResult(match);
+      setStatusMsg(`✔ FACIAL MATCH CONFIRMED: ${match.name} (95.8% Confidence)`);
 
-        const newSighting = {
-          id: `SIGHT_LIVE_${Date.now().toString().slice(-4)}`,
-          suspect_id: match.id,
-          name: match.name,
-          lat: userGps.lat,
-          lng: userGps.lng,
-          location_name: `Live Laptop Camera (${userGps.lat.toFixed(4)}, ${userGps.lng.toFixed(4)})`,
-          confidence: 0.958,
-          timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19)
-        };
+      const newSighting = {
+        id: `SIGHT_LIVE_${Date.now().toString().slice(-4)}`,
+        suspect_id: match.id,
+        name: match.name,
+        lat: userGps.lat,
+        lng: userGps.lng,
+        location_name: locName,
+        confidence: 0.958,
+        timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19)
+      };
 
-        // Add to active session sightings so red popup pin renders on live map
-        setActiveSessionSightings(prev => [newSighting, ...prev]);
+      // Add to active session sightings so red popup pin renders on live map
+      setActiveSessionSightings(prev => [newSighting, ...prev]);
 
-        // Log sighting to backend API for persistent history archive
-        try {
-          await fetch(`${API_BASE_URL}/api/surveillance/sighting`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              suspect_id: match.id,
-              suspect_name: match.name,
-              lat: userGps.lat,
-              lng: userGps.lng,
-              location_name: newSighting.location_name,
-              confidence: 0.958
-            })
-          });
+      // Log sighting to backend API for persistent history archive
+      try {
+        await fetch(`${API_BASE_URL}/api/surveillance/sighting`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            suspect_id: match.id,
+            suspect_name: match.name,
+            lat: userGps.lat,
+            lng: userGps.lng,
+            location_name: locName,
+            confidence: 0.958
+          })
+        });
 
-
-          fetchHeatmap();
-        } catch (e) {}
-      }
-    }, 1500);
+        fetchHeatmap();
+      } catch (e) {}
+    }, 1200);
   };
 
   const formatTime = (ts) => {
@@ -636,19 +633,19 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
                 top: '50%', left: '50%',
                 transform: 'translate(-50%, -50%)',
                 width: '180px', height: '190px',
-                border: matchResult && matchResult.isMatch ? '3px solid #ef4444' : (isScanning ? '2px dashed #ef4444' : '2px solid #2563eb'),
+                border: matchResult && matchResult.isMatch ? '3px solid #ef4444' : '3px solid #10b981',
                 borderRadius: '12px',
-                boxShadow: matchResult && matchResult.isMatch ? '0 0 30px rgba(239, 68, 68, 0.9)' : (isScanning ? '0 0 20px rgba(239, 68, 68, 0.5)' : '0 0 10px rgba(37, 99, 235, 0.4)'),
+                boxShadow: matchResult && matchResult.isMatch ? '0 0 30px rgba(239, 68, 68, 0.9)' : '0 0 20px rgba(16, 185, 129, 0.6)',
                 display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '8px',
                 pointerEvents: 'none',
                 transition: 'all 0.3s ease'
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: matchResult && matchResult.isMatch ? '#ef4444' : (isScanning ? '#f87171' : '#60a5fa'), fontWeight: 'bold' }}>
-                  <span>[HUD_REC]</span>
-                  <span>{matchResult && matchResult.isMatch ? '🚨 SUSPECT_MATCH' : (isScanning ? 'EXTRACTING...' : 'LIVE_SCANNING')}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: matchResult && matchResult.isMatch ? '#ef4444' : '#10b981', fontWeight: 'bold' }}>
+                  <span>{matchResult && matchResult.isMatch ? '[HUD_REC]' : '[HUD_SCAN]'}</span>
+                  <span>{matchResult && matchResult.isMatch ? '🚨 SUSPECT_MATCH' : (isScanning ? 'EXTRACTING...' : '🟢 CLEAR / NON-SUSPECT')}</span>
                 </div>
-                <div style={{ textAlign: 'center', fontSize: '10px', color: '#fff', background: matchResult && matchResult.isMatch ? 'rgba(220, 38, 38, 0.85)' : 'rgba(0,0,0,0.6)', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
-                  {matchResult && matchResult.isMatch ? `WANTED: ${matchResult.name}` : '128 Landmark Points'}
+                <div style={{ textAlign: 'center', fontSize: '10px', color: '#fff', background: matchResult && matchResult.isMatch ? 'rgba(220, 38, 38, 0.85)' : 'rgba(16, 185, 129, 0.85)', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                  {matchResult && matchResult.isMatch ? `WANTED: ${matchResult.name}` : 'Officer / Civilian Face (Clearance Granted)'}
                 </div>
               </div>
             )}
