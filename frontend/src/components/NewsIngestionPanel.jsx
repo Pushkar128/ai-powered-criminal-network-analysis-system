@@ -70,6 +70,24 @@ export default function NewsIngestionPanel({ onRefreshGraph, currentCase, onSele
       .catch(() => {});
   }, []);
 
+  const datasetCases = (casesList || []).filter(c => 
+    c.is_dataset || 
+    c.case_id === 'CASE-001' || 
+    c.case_id === 'CASE-DATASET-002' || 
+    c.case_id.includes('DATASET') || 
+    (c.title && c.title.toLowerCase().includes('dataset'))
+  );
+
+  const firCases = (casesList || []).filter(c => 
+    !datasetCases.some(d => d.case_id === c.case_id) && 
+    (c.case_id.includes('FIR') || c.case_id.includes('PDF') || c.case_id.includes('RAW') || (c.title && (c.title.toLowerCase().includes('fir') || c.title.toLowerCase().includes('pdf') || c.title.toLowerCase().includes('raw'))))
+  );
+
+  const osintNewsCases = (casesList || []).filter(c => 
+    !datasetCases.some(d => d.case_id === c.case_id) && 
+    !firCases.some(f => f.case_id === c.case_id)
+  );
+
   if (collapsed) {
     return (
       <div style={{ padding: '10px 16px', background: '#0f172a', borderRadius: '10px', border: '1px solid #1e293b', color: '#f8fafc', margin: '12px 0' }}>
@@ -82,11 +100,30 @@ export default function NewsIngestionPanel({ onRefreshGraph, currentCase, onSele
               style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '4px 10px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}
             >
               <option value="ALL">All Combined Cases Graph Network</option>
-              <optgroup label="[Live Upload / PDF] Ingested Case Graphs">
-                {casesList && casesList.map((c) => (
-                  <option key={c.case_id} value={c.case_id}>{c.title} ({c.node_count} Nodes)</option>
-                ))}
-              </optgroup>
+              
+              {datasetCases.length > 0 && (
+                <optgroup label="📂 Primary SIH Investigation Datasets">
+                  {datasetCases.map((c) => (
+                    <option key={c.case_id} value={c.case_id}>{c.title} ({c.node_count} Nodes)</option>
+                  ))}
+                </optgroup>
+              )}
+
+              {firCases.length > 0 && (
+                <optgroup label="📄 Ingested Police FIR & PDF Evidence Networks">
+                  {firCases.map((c) => (
+                    <option key={c.case_id} value={c.case_id}>{c.title} ({c.node_count} Nodes)</option>
+                  ))}
+                </optgroup>
+              )}
+
+              {osintNewsCases.length > 0 && (
+                <optgroup label="📰 OSINT Live News Feed Intelligence Clusters">
+                  {osintNewsCases.map((c) => (
+                    <option key={c.case_id} value={c.case_id}>{c.title} ({c.node_count} Nodes)</option>
+                  ))}
+                </optgroup>
+              )}
             </select>
 
             <button
@@ -229,13 +266,30 @@ export default function NewsIngestionPanel({ onRefreshGraph, currentCase, onSele
           }}
         >
           <option value="ALL">All Combined Cases Graph Network</option>
-          <optgroup label="[Active Investigation Cases] Ingested FIR & PDF Networks">
-            {casesList && casesList.map((c) => (
-              <option key={c.case_id} value={c.case_id}>
-                {c.title} ({c.node_count} Nodes)
-              </option>
-            ))}
-          </optgroup>
+          
+          {datasetCases.length > 0 && (
+            <optgroup label="📂 Primary SIH Investigation Datasets">
+              {datasetCases.map((c) => (
+                <option key={c.case_id} value={c.case_id}>{c.title} ({c.node_count} Nodes)</option>
+              ))}
+            </optgroup>
+          )}
+
+          {firCases.length > 0 && (
+            <optgroup label="📄 Ingested Police FIR & PDF Evidence Networks">
+              {firCases.map((c) => (
+                <option key={c.case_id} value={c.case_id}>{c.title} ({c.node_count} Nodes)</option>
+              ))}
+            </optgroup>
+          )}
+
+          {osintNewsCases.length > 0 && (
+            <optgroup label="📰 OSINT Live News Feed Intelligence Clusters">
+              {osintNewsCases.map((c) => (
+                <option key={c.case_id} value={c.case_id}>{c.title} ({c.node_count} Nodes)</option>
+              ))}
+            </optgroup>
+          )}
         </select>
 
         {/* Small Icon Button to Toggle Text Input for Active Case */}

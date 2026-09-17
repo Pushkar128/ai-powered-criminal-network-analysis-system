@@ -123,23 +123,24 @@ function App() {
   };
 
   const fetchCases = () => {
+    const datasetDefaults = [
+      { case_id: 'CASE-001', title: 'Case #001: Primary Suspect Network [Dataset]', node_count: 149, is_dataset: true },
+      { case_id: 'CASE-DATASET-002', title: 'Case #002: Financial Fraud & Money Laundering [Dataset]', node_count: 120, is_dataset: true }
+    ];
+
     fetch(`${API_BASE_URL}/api/cases`)
       .then(res => res.json())
       .then(data => {
         if (data.cases && data.cases.length > 0) {
-          setCasesList(data.cases);
+          const existingIds = new Set(data.cases.map(c => c.case_id));
+          const missingDefaults = datasetDefaults.filter(d => !existingIds.has(d.case_id));
+          setCasesList([...missingDefaults, ...data.cases]);
         } else {
-          setCasesList([
-            { case_id: 'CASE-001', title: 'Case #001: Primary Suspect Network [Dataset]', node_count: 10, is_dataset: true },
-            { case_id: 'CASE-DATASET-002', title: 'Case #002: Financial Fraud & Money Laundering [Dataset]', node_count: 8, is_dataset: true }
-          ]);
+          setCasesList(datasetDefaults);
         }
       })
       .catch(() => {
-        setCasesList([
-          { case_id: 'CASE-001', title: 'Case #001: Primary Suspect Network [Dataset]', node_count: 10, is_dataset: true },
-          { case_id: 'CASE-DATASET-002', title: 'Case #002: Financial Fraud & Money Laundering [Dataset]', node_count: 8, is_dataset: true }
-        ]);
+        setCasesList(datasetDefaults);
       });
   };
 
