@@ -2,10 +2,16 @@ import React, { useState, useRef } from 'react';
 import { API_BASE_URL } from '../config';
 
 export default function EvidenceUploadModal({ isOpen, onClose, onRefreshGraph, onUploadPdfSuccess }) {
+  if (!isOpen) return null;
+
   const [activeTab, setActiveTab] = useState('pdf'); // 'pdf' | 'text' | 'csv'
   const [caseId, setCaseId] = useState('FIR-2026-089');
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
+  const [firText, setFirText] = useState('');
+  const [statusMsg, setStatusMsg] = useState('');
+  const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef(null);
 
   // Handle File Selection (PDF or PNG / JPG / JPEG Images)
   const handleFileChange = (e) => {
