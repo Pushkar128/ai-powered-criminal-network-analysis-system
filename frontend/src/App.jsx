@@ -458,28 +458,6 @@ function App() {
                 <span>🕸️</span> Network Topology Visualizer
               </button>
 
-              <button
-                className={`nav-btn ${activeTab === 'search-tab' ? 'active' : ''}`}
-                onClick={() => setActiveTab('graph-tab')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  padding: '10px 14px',
-                  borderRadius: '6px',
-                  fontSize: '12.5px',
-                  fontWeight: activeTab === 'search-tab' ? 800 : 600,
-                  color: activeTab === 'search-tab' ? '#ffffff' : '#475569',
-                  background: activeTab === 'search-tab' ? '#b91c1c' : 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  boxShadow: activeTab === 'search-tab' ? '0 2px 6px rgba(185, 28, 28, 0.3)' : 'none',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <span>🔍</span> Search & Lookup
-              </button>
 
               <button
                 className={`nav-btn ${activeTab === 'resolution-tab' ? 'active' : ''}`}

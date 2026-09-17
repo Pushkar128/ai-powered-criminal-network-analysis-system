@@ -10,14 +10,7 @@ export default function Dashboard({ onNavigate }) {
       desc: 'Interactive criminal network visualization and force-directed topology analysis.',
       icon: '🕸️'
     },
-    {
-      id: 'search-tab',
-      code: 'MOD-02',
-      tag: 'FEDERATED QUERY',
-      title: 'SEARCH & LOOKUP',
-      desc: 'Search suspects, aliases, phone numbers, vehicles, and registered syndicate entities.',
-      icon: '🔍'
-    },
+
     {
       id: 'resolution-tab',
       code: 'MOD-03',
@@ -164,7 +157,7 @@ export default function Dashboard({ onNavigate }) {
         </div>
         <div style={{ fontSize: '11px', color: '#b91c1c', fontWeight: 800, letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#b91c1c' }}></span>
-          ALL 6 ENGINES SYNCHRONIZED
+          ALL 5 ENGINES SYNCHRONIZED
         </div>
       </div>
 
