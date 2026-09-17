@@ -109,7 +109,7 @@ export default function ShortestPathFinder({ nodesData = [], edgesData = [] }) {
                 <React.Fragment key={node.id || index}>
                   <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', padding: '10px 14px', borderRadius: '8px', display: 'flex', flexDirection: 'column' }}>
                     <span style={{ fontSize: '10px', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 700 }}>{node.type || 'Entity'}</span>
-                    <span style={{ fontWeight: 700, color: 'var(--primary-navy)' }}>{node.label || node.name || node.id}</span>
+                    <span style={{ fontWeight: 700, color: 'var(--primary-navy)' }}>{node.name || node.label || node.id}</span>
                     <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--primary-blue)' }}>{node.id}</span>
                   </div>
                   {index < pathResult.nodes.length - 1 && (

@@ -85,13 +85,13 @@ export default function EvidenceUploadModal({ isOpen, onClose, onRefreshGraph, o
 
       // Extract exact entities from FIR No. SYN-2026-0147 / Uploaded FIR Document
       const mockNodes = [
-        { id: `PER_${enteredCase}_1`, name: 'Rasheed Khan', label: 'Person', type: 'Suspect', threat_score: 95, alias: 'Target / Person of Interest', phone: '+91 9876543210', x: 260, y: 180 },
-        { id: `PER_${enteredCase}_2`, name: 'Imran Qureshi', label: 'Person', type: 'Suspect', threat_score: 84, alias: 'Associate', phone: '+91 9812345678', x: 120, y: 300 },
-        { id: `PER_${enteredCase}_3`, name: 'Sameer Ali', label: 'Person', type: 'Suspect', threat_score: 80, alias: 'Associate', phone: '+91 9988776655', x: 400, y: 320 },
-        { id: `ORG_${enteredCase}_1`, name: 'Eastern Dawn Front (EDF)', label: 'Organization', type: 'Syndicate', threat_score: 92, x: 500, y: 220 },
-        { id: `LOC_${enteredCase}_1`, name: 'Sector 12 Warehouse', label: 'Location', type: 'Meeting Location', threat_score: 88, x: 220, y: 390 },
-        { id: `PHN_${enteredCase}_1`, name: 'Digital Messages & Call Logs', label: 'Phone', type: 'CDR', threat_score: 50, x: 150, y: 100 },
-        { id: `PER_${enteredCase}_4`, name: 'Inspector Arjun Mehta', label: 'Person', type: 'Investigating Officer', threat_score: 15, x: 50, y: 50 }
+        { id: `PER_${enteredCase}_1`, name: 'Rasheed Khan', label: 'Rasheed Khan', type: 'Person', threat_score: 95, alias: 'Target / Person of Interest', phone: '+91 9876543210', x: 260, y: 180 },
+        { id: `PER_${enteredCase}_2`, name: 'Imran Qureshi', label: 'Imran Qureshi', type: 'Person', threat_score: 84, alias: 'Associate', phone: '+91 9812345678', x: 120, y: 300 },
+        { id: `PER_${enteredCase}_3`, name: 'Sameer Ali', label: 'Sameer Ali', type: 'Person', threat_score: 80, alias: 'Associate', phone: '+91 9988776655', x: 400, y: 320 },
+        { id: `ORG_${enteredCase}_1`, name: 'Eastern Dawn Front (EDF)', label: 'Eastern Dawn Front (EDF)', type: 'Organization', threat_score: 92, x: 500, y: 220 },
+        { id: `LOC_${enteredCase}_1`, name: 'Sector 12 Warehouse', label: 'Sector 12 Warehouse', type: 'Location', threat_score: 88, x: 220, y: 390 },
+        { id: `PHN_${enteredCase}_1`, name: '+91 9876543210 (CDR Logs)', label: '+91 9876543210 (CDR Logs)', type: 'Phone', threat_score: 50, x: 150, y: 100 },
+        { id: `PER_${enteredCase}_4`, name: 'Inspector Arjun Mehta', label: 'Inspector Arjun Mehta', type: 'Person', threat_score: 15, x: 50, y: 50 }
       ];
 
       const mockEdges = [

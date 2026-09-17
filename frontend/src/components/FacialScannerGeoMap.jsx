@@ -75,9 +75,46 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
       });
   };
 
+  // Auto-detect live laptop/device GPS coordinates using HTML5 Geolocation API
+  const updateDeviceLocation = () => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          setUserGps({ lat, lng });
+
+          if (leafletMapRef.current) {
+            leafletMapRef.current.setView([lat, lng], 14, { animate: true });
+          }
+
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+            const data = await res.json();
+            if (data && data.address) {
+              const city = data.address.city || data.address.town || data.address.suburb || data.address.village || data.address.county || data.address.state || 'Live Location';
+              const state = data.address.state || '';
+              const locStr = `${city}${state ? ', ' + state : ''} Checkpoint (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+              setCustomLocationName(locStr);
+            } else {
+              setCustomLocationName(`Live Laptop GPS Checkpoint (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
+            }
+          } catch (e) {
+            setCustomLocationName(`Live Laptop GPS Checkpoint (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
+          }
+        },
+        (err) => {
+          console.warn('Browser Geolocation denied or unavailable:', err);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    }
+  };
+
   useEffect(() => {
     fetchHeatmap();
     fetchRegisteredSuspects();
+    updateDeviceLocation();
     const pollInterval = setInterval(fetchHeatmap, 3000); // Poll every 3s
     return () => clearInterval(pollInterval);
   }, []);
@@ -318,6 +355,7 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
 
   // Start Laptop Camera
   const startCamera = async () => {
+    updateDeviceLocation();
     try {
       setStatusMsg('Accessing laptop camera...');
       const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
@@ -968,6 +1006,25 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
               </p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button
+                onClick={updateDeviceLocation}
+                style={{
+                  padding: '5px 10px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  background: '#2563eb',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+                title="Detect & center map on live laptop device GPS location"
+              >
+                <span>🎯</span> Sync Device GPS
+              </button>
               {activeSessionSightings.length > 0 && (
                 <button
                   className="btn btn-danger"
