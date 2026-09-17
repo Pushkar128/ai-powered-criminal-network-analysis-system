@@ -10,6 +10,7 @@ import EvidenceUploadModal from './components/EvidenceUploadModal';
 import ChainOfCustodyAudit from './components/ChainOfCustodyAudit';
 import FacialScannerGeoMap from './components/FacialScannerGeoMap';
 import LandingPage from './components/LandingPage';
+import Dashboard from './components/Dashboard';
 import { API_BASE_URL } from './config';
 
 // INITIAL_NODES & EDGES...
@@ -89,7 +90,7 @@ function App() {
   const [view, setView] = useState(initialView); // 'landing' | 'main'
   const [userRole, setUserRole] = useState(initialRole); // 'public' | 'admin'
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState('graph-tab');
+  const [activeTab, setActiveTab] = useState('dashboard-tab');
   const [nodesData, setNodesData] = useState(INITIAL_NODES);
   const [edgesData, setEdgesData] = useState(INITIAL_EDGES);
   const [selectedNode, setSelectedNode] = useState(null);
@@ -406,38 +407,170 @@ function App() {
       <div className="main-body">
         <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
           <div className="sidebar-section">
-            <h3>Intelligence Modules</h3>
-            <div className="module-nav">
+            <h3 style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
+              Intelligence Modules
+            </h3>
+            <div className="module-nav" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              
+              <button
+                className={`nav-btn ${activeTab === 'dashboard-tab' ? 'active' : ''}`}
+                onClick={() => setActiveTab('dashboard-tab')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '10px 14px',
+                  borderRadius: '6px',
+                  fontSize: '12.5px',
+                  fontWeight: activeTab === 'dashboard-tab' ? 800 : 600,
+                  color: activeTab === 'dashboard-tab' ? '#ffffff' : '#475569',
+                  background: activeTab === 'dashboard-tab' ? '#b91c1c' : 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  boxShadow: activeTab === 'dashboard-tab' ? '0 2px 6px rgba(185, 28, 28, 0.3)' : 'none',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <span>📊</span> Dashboard
+              </button>
+
               <button
                 className={`nav-btn ${activeTab === 'graph-tab' ? 'active' : ''}`}
                 onClick={() => setActiveTab('graph-tab')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '10px 14px',
+                  borderRadius: '6px',
+                  fontSize: '12.5px',
+                  fontWeight: activeTab === 'graph-tab' ? 800 : 600,
+                  color: activeTab === 'graph-tab' ? '#ffffff' : '#475569',
+                  background: activeTab === 'graph-tab' ? '#b91c1c' : 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  boxShadow: activeTab === 'graph-tab' ? '0 2px 6px rgba(185, 28, 28, 0.3)' : 'none',
+                  transition: 'all 0.15s ease'
+                }}
               >
-                Network Topology Visualizer
+                <span>🕸️</span> Network Topology Visualizer
               </button>
+
               <button
-                className={`nav-btn ${activeTab === 'kingpin-tab' ? 'active' : ''}`}
-                onClick={() => setActiveTab('kingpin-tab')}
+                className={`nav-btn ${activeTab === 'search-tab' ? 'active' : ''}`}
+                onClick={() => setActiveTab('graph-tab')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '10px 14px',
+                  borderRadius: '6px',
+                  fontSize: '12.5px',
+                  fontWeight: activeTab === 'search-tab' ? 800 : 600,
+                  color: activeTab === 'search-tab' ? '#ffffff' : '#475569',
+                  background: activeTab === 'search-tab' ? '#b91c1c' : 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  boxShadow: activeTab === 'search-tab' ? '0 2px 6px rgba(185, 28, 28, 0.3)' : 'none',
+                  transition: 'all 0.15s ease'
+                }}
               >
-                Kingpin & Dark Money Analytics
+                <span>🔍</span> Search & Lookup
               </button>
-              <button
-                className={`nav-btn ${activeTab === 'path-tab' ? 'active' : ''}`}
-                onClick={() => setActiveTab('path-tab')}
-              >
-                Shortest Path & Bottlenecks
-              </button>
+
               <button
                 className={`nav-btn ${activeTab === 'resolution-tab' ? 'active' : ''}`}
                 onClick={() => setActiveTab('resolution-tab')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '10px 14px',
+                  borderRadius: '6px',
+                  fontSize: '12.5px',
+                  fontWeight: activeTab === 'resolution-tab' ? 800 : 600,
+                  color: activeTab === 'resolution-tab' ? '#ffffff' : '#475569',
+                  background: activeTab === 'resolution-tab' ? '#b91c1c' : 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  boxShadow: activeTab === 'resolution-tab' ? '0 2px 6px rgba(185, 28, 28, 0.3)' : 'none',
+                  transition: 'all 0.15s ease'
+                }}
               >
-                Entity Resolution & Merges
+                <span>🎯</span> Entity Resolution & Merges
               </button>
+
+              <button
+                className={`nav-btn ${activeTab === 'path-tab' ? 'active' : ''}`}
+                onClick={() => setActiveTab('path-tab')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '10px 14px',
+                  borderRadius: '6px',
+                  fontSize: '12.5px',
+                  fontWeight: activeTab === 'path-tab' ? 800 : 600,
+                  color: activeTab === 'path-tab' ? '#ffffff' : '#475569',
+                  background: activeTab === 'path-tab' ? '#b91c1c' : 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  boxShadow: activeTab === 'path-tab' ? '0 2px 6px rgba(185, 28, 28, 0.3)' : 'none',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <span>🛤️</span> Shortest Path & Bottlenecks
+              </button>
+
+              <button
+                className={`nav-btn ${activeTab === 'kingpin-tab' ? 'active' : ''}`}
+                onClick={() => setActiveTab('kingpin-tab')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '10px 14px',
+                  borderRadius: '6px',
+                  fontSize: '12.5px',
+                  fontWeight: activeTab === 'kingpin-tab' ? 800 : 600,
+                  color: activeTab === 'kingpin-tab' ? '#ffffff' : '#475569',
+                  background: activeTab === 'kingpin-tab' ? '#b91c1c' : 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  boxShadow: activeTab === 'kingpin-tab' ? '0 2px 6px rgba(185, 28, 28, 0.3)' : 'none',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <span>💰</span> Kingpin & Dark Money Analytics
+              </button>
+
               <button
                 className={`nav-btn ${activeTab === 'facial-tab' ? 'active' : ''}`}
                 onClick={() => setActiveTab('facial-tab')}
-                style={{ color: 'var(--primary-blue)', fontWeight: 600 }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '10px 14px',
+                  borderRadius: '6px',
+                  fontSize: '12.5px',
+                  fontWeight: activeTab === 'facial-tab' ? 800 : 600,
+                  color: activeTab === 'facial-tab' ? '#ffffff' : '#475569',
+                  background: activeTab === 'facial-tab' ? '#b91c1c' : 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  boxShadow: activeTab === 'facial-tab' ? '0 2px 6px rgba(185, 28, 28, 0.3)' : 'none',
+                  transition: 'all 0.15s ease'
+                }}
               >
-                📷 Facial Scanner & Geo-Map
+                <span>📷</span> Facial Scanner & Geo-Map
               </button>
             </div>
           </div>
@@ -502,6 +635,16 @@ function App() {
         </aside>
 
         <main className="workspace">
+          {activeTab === 'dashboard-tab' && (
+            <Dashboard
+              onNavigate={(tabId) => {
+                if (tabId === 'upload') setUploadModalOpen(true);
+                else if (tabId === 'audit') setAuditModalOpen(true);
+                else setActiveTab(tabId);
+              }}
+            />
+          )}
+
           {activeTab === 'graph-tab' && (
             <section className="tab-content active">
               <div className="workspace-header">
