@@ -11,6 +11,7 @@ import ChainOfCustodyAudit from './components/ChainOfCustodyAudit';
 import FacialScannerGeoMap from './components/FacialScannerGeoMap';
 import LandingPage from './components/LandingPage';
 import Dashboard from './components/Dashboard';
+import IntelligenceChatbot from './components/IntelligenceChatbot';
 import { API_BASE_URL } from './config';
 
 // INITIAL_NODES & EDGES...
@@ -917,6 +918,14 @@ function App() {
       <ChainOfCustodyAudit
         isOpen={auditModalOpen}
         onClose={() => setAuditModalOpen(false)}
+      />
+
+      {/* AI DATABASE INTEL CHATBOT (Floating bottom-right button & modal) */}
+      <IntelligenceChatbot
+        nodesData={nodesData}
+        edgesData={edgesData}
+        casesList={casesList}
+        selectedCase={selectedCase}
       />
     </div>
   );
