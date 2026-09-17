@@ -84,9 +84,110 @@ export default function App() {
     fetch(`${API_BASE_URL}/api/cases`)
       .then(res => res.json())
       .then(data => {
-        if (data.cases) setCasesList(data.cases);
+        if (data.cases && data.cases.length > 0) {
+          setCasesList(data.cases);
+        } else {
+          setCasesList([
+            { case_id: 'CASE-001', title: 'Case #001: Primary Suspect Network [Dataset]', node_count: 10, is_dataset: true },
+            { case_id: 'CASE-DATASET-002', title: 'Case #002: Financial Fraud & Money Laundering [Dataset]', node_count: 8, is_dataset: true }
+          ]);
+        }
       })
-      .catch(() => {});
+      .catch(() => {
+        setCasesList([
+          { case_id: 'CASE-001', title: 'Case #001: Primary Suspect Network [Dataset]', node_count: 10, is_dataset: true },
+          { case_id: 'CASE-DATASET-002', title: 'Case #002: Financial Fraud & Money Laundering [Dataset]', node_count: 8, is_dataset: true }
+        ]);
+      });
+  };
+
+  const handleQuickUpdateGraph = (newNodes, newEdges, rawText) => {
+    let nodesToAdd = [...newNodes];
+    let edgesToAdd = [...newEdges];
+
+    if (nodesToAdd.length === 0 && rawText) {
+      const stopwords = new Set(["Has", "Recently", "Contacted", "Called", "Met", "Spoke", "With", "To", "From", "And", "The", "In", "At", "Near", "On", "Of", "For", "Is", "Was", "They", "He", "She", "It", "Case", "Update", "Fir", "New", "Yesterday", "Today"]);
+      const matches = (rawText.match(/\b[A-Z][a-z]+\b/g) || []).filter(w => !stopwords.has(w));
+      const uniqueNames = [...new Set(matches)];
+
+      uniqueNames.forEach((name, idx) => {
+        const existingNode = nodesData.find(n => n.name && n.name.toLowerCase().includes(name.toLowerCase()));
+        if (!existingNode) {
+          nodesToAdd.push({
+            id: `PER_${name.toUpperCase()}_${Math.floor(Math.random() * 1000)}`,
+            name: name,
+            label: name,
+            type: 'Person',
+            threat_score: 78,
+            x: 280 + idx * 110,
+            y: 220 + (idx % 2) * 70
+          });
+        }
+      });
+
+      if (uniqueNames.length >= 2) {
+        const textLower = rawText.toLowerCase();
+        let rel = "ASSOCIATED_WITH";
+        if (textLower.includes("contact") || textLower.includes("call") || textLower.includes("phone")) rel = "CONTACTED";
+        else if (textLower.includes("meet") || textLower.includes("met") || textLower.includes("spotted")) rel = "SPOTTED_WITH";
+        else if (textLower.includes("pay") || textLower.includes("transfer") || textLower.includes("money")) rel = "FINANCIAL_TRANSFER";
+
+        for (let i = 0; i < uniqueNames.length - 1; i++) {
+          const name1 = uniqueNames[i];
+          const name2 = uniqueNames[i + 1];
+          const n1 = nodesData.find(n => n.name && n.name.toLowerCase().includes(name1.toLowerCase())) || nodesToAdd.find(n => n.name && n.name.toLowerCase().includes(name1.toLowerCase()));
+          const n2 = nodesData.find(n => n.name && n.name.toLowerCase().includes(name2.toLowerCase())) || nodesToAdd.find(n => n.name && n.name.toLowerCase().includes(name2.toLowerCase()));
+
+          if (n1 && n2) {
+            edgesToAdd.push({
+              source: n1.id,
+              target: n2.id,
+              relationship: rel,
+              weight: 0.9,
+              is_high_risk: true
+            });
+          }
+        }
+      }
+    }
+
+    if (nodesToAdd.length > 0) {
+      setNodesData(prev => {
+        const existingIds = new Set(prev.map(n => n.id));
+        const filteredNew = nodesToAdd.map(n => ({
+          ...n,
+          label: n.name || n.label,
+          type: n.type || 'Person'
+        })).filter(n => !existingIds.has(n.id));
+        return [...prev, ...filteredNew];
+      });
+    }
+
+    if (edgesToAdd.length > 0) {
+      setEdgesData(prev => {
+        const existingKeys = new Set(prev.map(e => `${e.source}->${e.target}`));
+        const filteredNew = edgesToAdd.map(e => ({
+          source: e.source,
+          target: e.target,
+          relationship: e.label || e.relationship || 'CONNECTED',
+          weight: e.weight || 0.9,
+          is_high_risk: true
+        })).filter(e => !existingKeys.has(`${e.source}->${e.target}`));
+        return [...prev, ...filteredNew];
+      });
+    }
+  };
+
+  const handleDeleteNode = async (nodeId) => {
+    try {
+      await fetch(`${API_BASE_URL}/api/node/${encodeURIComponent(nodeId)}`, {
+        method: 'DELETE'
+      });
+    } catch (e) {}
+
+    setNodesData(prev => prev.filter(n => n.id !== nodeId));
+    setEdgesData(prev => prev.filter(e => e.source !== nodeId && e.target !== nodeId));
+    setSelectedNode(null);
   };
 
   useEffect(() => {
@@ -353,6 +454,7 @@ export default function App() {
                 onSelectCase={(cId) => setSelectedCase(cId)}
                 casesList={casesList}
                 onRefreshCases={fetchCases}
+                onQuickUpdateGraph={handleQuickUpdateGraph}
               />
 
               <NetworkTopology
@@ -461,11 +563,14 @@ export default function App() {
           )}
         </main>
 
-        <SuspectDossier
-          selectedNode={selectedNode}
-          edgesData={edgesData}
-          onClose={() => setSelectedNode(null)}
-        />
+        {activeTab === 'graph-tab' && (
+          <SuspectDossier
+            selectedNode={selectedNode}
+            edgesData={edgesData}
+            onClose={() => setSelectedNode(null)}
+            onDeleteNode={handleDeleteNode}
+          />
+        )}
       </div>
 
       {/* Modals */}

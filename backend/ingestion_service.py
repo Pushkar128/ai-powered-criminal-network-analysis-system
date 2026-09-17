@@ -15,12 +15,18 @@ def process_raw_fir_text(fir_text: str, case_id: str = "CASE-NEW"):
     vehicles = list(set(re.findall(r'[A-Z]{2}[-\s]?\d{2}[-\s]?[A-Z]{1,2}[-\s]?\d{4}', fir_text)))
     amounts = list(set(re.findall(r'₹?\s?\d+,\d+,\d+|\d+\s?Lakh|\d+\s?Crore', fir_text)))
     
-    # Extract names following typical FIR patterns like "Suspect Name", "Accused ...", "Ramesh", "Bhai", etc.
+    STOPWORDS = {"Has", "Recently", "Contacted", "Called", "Met", "Spoke", "With", "To", "From", "And", "The", "In", "At", "Near", "On", "Of", "For", "Is", "Was", "They", "He", "She", "It", "Case", "Update", "Fir", "New", "Yesterday", "Today"}
+
+    # Extract names following typical FIR patterns or free-form sentence capitalized words
     name_matches = re.findall(r'(?:Accused|Suspect|Alias|Named)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)', fir_text)
-    names = list(set(name_matches)) if name_matches else ["Unknown Suspect"]
+    if not name_matches:
+        raw_words = re.findall(r'\b[A-Z][a-z]+\b', fir_text)
+        name_matches = [w for w in raw_words if w not in STOPWORDS]
+    
+    names = list(dict.fromkeys(name_matches)) if name_matches else ["Unknown Suspect"]
     
     locations_matches = re.findall(r'(?:at|near|location|area of)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)', fir_text)
-    locations = list(set(locations_matches)) if locations_matches else ["Unspecified Location"]
+    locations = list(set(locations_matches)) if locations_matches else []
 
     nodes_created = []
     edges_created = []
@@ -35,14 +41,36 @@ def process_raw_fir_text(fir_text: str, case_id: str = "CASE-NEW"):
             
             # Create Suspect Nodes
             for idx, name in enumerate(names):
-                suspect_id = f"PER_NEW_{idx+1}_{int(hash(name)%10000)}"
+                suspect_id = f"PER_{name.upper()[:6]}_{int(abs(hash(name)) % 10000)}"
                 session.run("""
                     MERGE (p:Entity {name: $name})
-                    ON CREATE SET p.id = $suspect_id, p.type = 'Person', p.status = 'WANTED', p.case_id = $case_id
+                    ON CREATE SET p.id = $suspect_id, p.type = 'Person', p.status = 'SUSPECT', p.case_id = $case_id
                     MERGE (c:Entity {id: $case_id})
-                    MERGE (p)-[:MENTIONED_IN_FIR]->(c)
+                    MERGE (p)-[:MENTIONED_IN_CASE]->(c)
                 """, name=name, suspect_id=suspect_id, case_id=case_id)
-                nodes_created.append({"id": suspect_id, "name": name, "type": "Person"})
+                nodes_created.append({"id": suspect_id, "name": name, "type": "Person", "case_id": case_id})
+
+            # Detect contextual relationship between persons
+            text_lower = fir_text.lower()
+            if any(k in text_lower for k in ["contact", "call", "phone", "talk", "spoke"]):
+                rel_label = "CONTACTED"
+            elif any(k in text_lower for k in ["meet", "met", "spotted", "seen"]):
+                rel_label = "SPOTTED_WITH"
+            elif any(k in text_lower for k in ["pay", "paid", "transfer", "fund", "money"]):
+                rel_label = "FINANCIAL_TRANSFER"
+            else:
+                rel_label = "ASSOCIATED_WITH"
+
+            if len(nodes_created) >= 2:
+                for i in range(len(nodes_created) - 1):
+                    p1 = nodes_created[i]["id"]
+                    p2 = nodes_created[i+1]["id"]
+                    session.run(f"""
+                        MATCH (a:Entity {{id: $p1}}), (b:Entity {{id: $p2}})
+                        MERGE (a)-[r:{rel_label} {{case_id: $case_id}}]->(b)
+                        ON CREATE SET r.weight = 0.9, r.created_at = timestamp()
+                    """, p1=p1, p2=p2, case_id=case_id)
+                    edges_created.append({"source": p1, "target": p2, "label": rel_label})
 
             # Create Phone Nodes & connect to Suspect
             for idx, ph in enumerate(phones):
@@ -51,7 +79,7 @@ def process_raw_fir_text(fir_text: str, case_id: str = "CASE-NEW"):
                     MERGE (ph:Entity {id: $phone_id})
                     ON CREATE SET ph.name = $ph, ph.type = 'Phone', ph.case_id = $case_id
                 """, phone_id=phone_id, ph=ph, case_id=case_id)
-                nodes_created.append({"id": phone_id, "name": ph, "type": "Phone"})
+                nodes_created.append({"id": phone_id, "name": ph, "type": "Phone", "case_id": case_id})
 
                 if nodes_created:
                     first_suspect = nodes_created[0]["id"]
@@ -69,7 +97,7 @@ def process_raw_fir_text(fir_text: str, case_id: str = "CASE-NEW"):
                     MERGE (v:Entity {id: $veh_id})
                     ON CREATE SET v.name = $veh, v.type = 'Vehicle', v.case_id = $case_id
                 """, veh_id=veh_id, veh=veh, case_id=case_id)
-                nodes_created.append({"id": veh_id, "name": veh, "type": "Vehicle"})
+                nodes_created.append({"id": veh_id, "name": veh, "type": "Vehicle", "case_id": case_id})
 
             # Create Location Nodes
             for idx, loc in enumerate(locations):
@@ -78,12 +106,12 @@ def process_raw_fir_text(fir_text: str, case_id: str = "CASE-NEW"):
                     MERGE (l:Entity {id: $loc_id})
                     ON CREATE SET l.name = $loc, l.type = 'Location', l.case_id = $case_id
                 """, loc_id=loc_id, loc=loc, case_id=case_id)
-                nodes_created.append({"id": loc_id, "name": loc, "type": "Location"})
+                nodes_created.append({"id": loc_id, "name": loc, "type": "Location", "case_id": case_id})
 
     record_audit_action(
         "NLP Ingestion Engine", 
         "FIR_PARSED", 
-        f"Extracted {len(nodes_created)} entities from FIR text for Case {case_id}"
+        f"Extracted {len(nodes_created)} entities and {len(edges_created)} edges from text for Case {case_id}"
     )
 
     return {

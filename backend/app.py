@@ -10,6 +10,7 @@ from backend.graph_service import (
     get_node_details,
     get_resolved_entities,
     find_shortest_path,
+    delete_entity_node,
 )
 from backend.news_service import (
     get_driver as get_news_driver,
@@ -165,6 +166,16 @@ def get_node(entity_id: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Node lookup failed: {str(e)}")
+
+
+@app.delete("/api/node/{entity_id}")
+def remove_node(entity_id: str):
+    """Deletes entity node and all connected edges from Neo4j database."""
+    try:
+        res = delete_entity_node(entity_id)
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Node deletion failed: {str(e)}")
 
 
 # ============================================================================

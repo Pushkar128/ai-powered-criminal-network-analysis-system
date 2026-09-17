@@ -149,12 +149,22 @@ def process_news_article(article, driver):
         
         if matched_entities:
             # ================================================================
-            # SCENARIO A: MATCH FOUND -> UPDATE EXISTING GRAPH & CASE
+            # SCENARIO A: MATCH FOUND -> LINK NEWS EVENT BUT KEEP RSS IN SEPARATE CASE NETWORK
             # ================================================================
-            target_case_id = matched_entities[0].get("case_id", "CASE-001")
+            matched_case_id = matched_entities[0].get("case_id", "CASE-001")
             matched_name = matched_entities[0]["name"]
             
+            # Prevent merging RSS news directly into Dataset cases
+            new_case_num = len(PROCESSED_NEWS_CACHE) + 101
+            target_case_id = f"CASE-NEWS-{new_case_num}"
+            case_title = f"Case #{new_case_num}: OSINT Intelligence ({matched_name})"
+            
             cypher = """
+            // 1. Create News Case Node
+            MERGE (c:Case {id: $case_id})
+            ON CREATE SET c.name = $case_title, c.created_at = timestamp(), c.source = 'OSINT News'
+
+            // 2. Create News Event Node
             MERGE (ne:Entity:NewsEvent {id: $news_id})
             ON CREATE SET 
                 ne.name = $title,
@@ -164,6 +174,8 @@ def process_news_article(article, driver):
                 ne.case_id = $case_id,
                 ne.source = 'Google News RSS'
             
+            MERGE (ne)-[:BELONGS_TO]->(c)
+
             WITH ne
             MATCH (target:Entity) WHERE target.id = $matched_id OR target.name = $matched_name
             MERGE (target)-[r:MENTIONED_IN_NEWS {case_id: $case_id}]->(ne)
@@ -176,11 +188,12 @@ def process_news_article(article, driver):
                 link=link, 
                 pub_date=pub_date, 
                 case_id=target_case_id,
+                case_title=case_title,
                 matched_id=matched_entities[0]["id"],
                 matched_name=matched_name
             )
             
-            # Attach extracted locations to the existing case graph
+            # Attach extracted locations to the news case graph
             for loc in extraction["extracted_locations"]:
                 loc_id = f"LOC_{abs(hash(loc)) % 10000}"
                 loc_query = """
@@ -195,7 +208,7 @@ def process_news_article(article, driver):
             PROCESSED_NEWS_CACHE.add(article["id"])
             return {
                 "status": "MERGED",
-                "action": "Updated Existing Graph",
+                "action": "Linked News Event",
                 "case_id": target_case_id,
                 "matched_entity": matched_name,
                 "article": article,
@@ -206,7 +219,7 @@ def process_news_article(article, driver):
             # ================================================================
             # SCENARIO B: NO MATCH -> CREATE NEW ISOLATED CASE GRAPH
             # ================================================================
-            new_case_num = len(PROCESSED_NEWS_CACHE) + 102
+            new_case_num = len(PROCESSED_NEWS_CACHE) + 101
             new_case_id = f"CASE-NEWS-{new_case_num}"
             case_title = f"Case #{new_case_num}: {title}"
             
@@ -301,18 +314,23 @@ def get_all_cases(driver):
         # Format display titles
         cases = []
         for r in records:
-            cid = r["case_id"]
-            if cid == "CASE-001":
-                title = "Case #001: Primary Suspect Network (Red Fort Ring)"
-            elif "NEWS" in cid:
-                title = f"Case #{cid.split('-')[-1]}: OSINT News Intelligence Cluster"
+            cid = str(r["case_id"])
+            is_dataset = cid in ["CASE-001", "CASE-DATASET-001"] or "DATASET" in cid.upper() or cid.startswith("CASE-2026") or cid.startswith("C0")
+            
+            if cid in ["CASE-001", "CASE-DATASET-001"]:
+                title = "Case #001: Primary Suspect Network [Dataset]"
+            elif is_dataset:
+                title = f"Case #{cid}: Benchmark Synthetic Investigation [Dataset]"
+            elif "NEWS" in cid.upper():
+                title = f"Case #{cid.split('-')[-1] if '-' in cid else cid}: OSINT Live News Intelligence Cluster"
             else:
                 title = f"Case #{cid}: Crime Investigation Unit"
                 
             cases.append({
                 "case_id": cid,
                 "title": title,
-                "node_count": r["node_count"]
+                "node_count": r["node_count"],
+                "is_dataset": is_dataset
             })
         return cases
 

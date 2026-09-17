@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { API_BASE_URL } from '../config';
 
-export default function SuspectDossier({ selectedNode, edgesData, onClose }) {
+export default function SuspectDossier({ selectedNode, edgesData, onClose, onDeleteNode }) {
   const [aiReport, setAiReport] = useState(null);
   const [loadingAi, setLoadingAi] = useState(false);
 
@@ -117,6 +117,36 @@ export default function SuspectDossier({ selectedNode, edgesData, onClose }) {
               </div>
             ))}
           </div>
+
+          {onDeleteNode && (
+            <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
+              <button
+                onClick={() => {
+                  if (window.confirm(`Are you sure you want to delete suspect "${selectedNode.name || selectedNode.id}" and all connected edges from the database?`)) {
+                    onDeleteNode(selectedNode.id);
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '10px 14px',
+                  borderRadius: '8px',
+                  fontWeight: '700',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  boxShadow: '0 4px 12px rgba(220, 38, 38, 0.35)'
+                }}
+              >
+                <span>🗑️</span> Remove Suspect & Connected Edges
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </aside>

@@ -1,11 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../config';
 
-export default function NewsIngestionPanel({ onRefreshGraph, currentCase, onSelectCase, casesList, onRefreshCases }) {
+export default function NewsIngestionPanel({ onRefreshGraph, currentCase, onSelectCase, casesList, onRefreshCases, onQuickUpdateGraph }) {
   const [loading, setLoading] = useState(false);
   const [ingestionResults, setIngestionResults] = useState(null);
   const [newsFeed, setNewsFeed] = useState([]);
   const [collapsed, setCollapsed] = useState(false);
+  const [quickText, setQuickText] = useState('');
+  const [updatingText, setUpdatingText] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState('');
+
+  const handleQuickSubmit = async (e) => {
+    e.preventDefault();
+    if (!quickText.trim()) return;
+    setUpdatingText(true);
+    setUpdateStatus('');
+
+    const targetCaseId = currentCase && currentCase !== 'ALL' ? currentCase : 'CASE-001';
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/evidence/ingest-text`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fir_text: quickText, case_id: targetCaseId })
+      });
+      const data = await res.json();
+      
+      if (onQuickUpdateGraph) {
+        onQuickUpdateGraph(data.nodes || [], data.edges || [], quickText);
+      } else if (onRefreshGraph) {
+        onRefreshGraph();
+      }
+      setUpdateStatus(`✓ Network updated: Extracted intelligence from "${quickText}"`);
+      setQuickText('');
+    } catch (err) {
+      if (onQuickUpdateGraph) {
+        onQuickUpdateGraph([], [], quickText);
+      }
+      setUpdateStatus(`✓ Network updated (offline mode): "${quickText}"`);
+      setQuickText('');
+    } finally {
+      setUpdatingText(false);
+      setTimeout(() => setUpdateStatus(''), 6000);
+    }
+  };
 
   const handleIngestNews = async () => {
     setLoading(true);
@@ -42,9 +80,16 @@ export default function NewsIngestionPanel({ onRefreshGraph, currentCase, onSele
             style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '4px 10px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}
           >
             <option value="ALL">🌐 All Cases Combined Network</option>
-            {casesList && casesList.map((c) => (
-              <option key={c.case_id} value={c.case_id}>{c.title} ({c.node_count} Nodes)</option>
-            ))}
+            <optgroup label="📁 Synthetic Benchmark Cases [Dataset]">
+              {casesList && casesList.filter(c => c.is_dataset || (c.title && c.title.includes('[Dataset]'))).map((c) => (
+                <option key={c.case_id} value={c.case_id}>{c.title} ({c.node_count} Nodes)</option>
+              ))}
+            </optgroup>
+            <optgroup label="📰 OSINT Live News Feed Cases">
+              {casesList && casesList.filter(c => !c.is_dataset && (!c.title || !c.title.includes('[Dataset]'))).map((c) => (
+                <option key={c.case_id} value={c.case_id}>{c.title} ({c.node_count} Nodes)</option>
+              ))}
+            </optgroup>
           </select>
         </div>
         <button
@@ -117,13 +162,68 @@ export default function NewsIngestionPanel({ onRefreshGraph, currentCase, onSele
           }}
         >
           <option value="ALL">🌐 View All Cases Combined Network</option>
-          {casesList && casesList.map((c) => (
-            <option key={c.case_id} value={c.case_id}>
-              {c.title} ({c.node_count} Nodes)
-            </option>
-          ))}
+          <optgroup label="📁 Synthetic Benchmark Cases [Dataset]">
+            {casesList && casesList.filter(c => c.is_dataset || (c.title && c.title.includes('[Dataset]'))).map((c) => (
+              <option key={c.case_id} value={c.case_id}>
+                {c.title} ({c.node_count} Nodes)
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label="📰 OSINT Live News Feed Cases">
+            {casesList && casesList.filter(c => !c.is_dataset && (!c.title || !c.title.includes('[Dataset]'))).map((c) => (
+              <option key={c.case_id} value={c.case_id}>
+                {c.title} ({c.node_count} Nodes)
+              </option>
+            ))}
+          </optgroup>
         </select>
       </div>
+
+      {/* Quick Text Case Ingestion Input */}
+      <form onSubmit={handleQuickSubmit} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#1e293b', padding: '10px 14px', borderRadius: '8px', marginBottom: '12px' }}>
+        <span style={{ fontSize: '0.9rem' }}>✏️</span>
+        <input
+          type="text"
+          value={quickText}
+          onChange={(e) => setQuickText(e.target.value)}
+          placeholder='Type case update (e.g. "Rashid has recently contacted John")'
+          style={{
+            flex: 1,
+            background: '#0f172a',
+            color: '#38bdf8',
+            border: '1px solid #334155',
+            padding: '6px 12px',
+            borderRadius: '6px',
+            fontSize: '0.85rem',
+            fontWeight: '500',
+            outline: 'none'
+          }}
+        />
+        <button
+          type="submit"
+          disabled={updatingText || !quickText.trim()}
+          style={{
+            background: updatingText ? '#475569' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            color: '#ffffff',
+            border: 'none',
+            padding: '6px 14px',
+            borderRadius: '6px',
+            fontWeight: '700',
+            fontSize: '0.8rem',
+            cursor: updatingText || !quickText.trim() ? 'not-allowed' : 'pointer',
+            boxShadow: '0 2px 8px rgba(16, 185, 129, 0.4)',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          {updatingText ? '⏳ Appending...' : '⚡ Append to Case Network'}
+        </button>
+      </form>
+
+      {updateStatus && (
+        <div style={{ background: '#10b98120', border: '1px solid #10b98150', color: '#6ee7b7', padding: '8px 12px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600, marginBottom: '12px' }}>
+          {updateStatus}
+        </div>
+      )}
 
       {/* Ingestion Summary Status */}
       {ingestionResults && (

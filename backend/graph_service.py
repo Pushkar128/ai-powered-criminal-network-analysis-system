@@ -258,3 +258,21 @@ def find_shortest_path(id1, id2):
         with driver.session() as session:
             record = session.run(query, id1=str(id1), id2=str(id2)).single()
             return dict(record) if record else None
+
+
+# ============================================================================
+# FEATURE 6: DELETE NODE & DETACH CONNECTED EDGES
+# ============================================================================
+def delete_entity_node(entity_id):
+    """
+    Deletes an entity node and all touching relationship edges from Neo4j database.
+    """
+    query = """
+    MATCH (n:Entity)
+    WHERE n.id = $id OR coalesce(n['entity_id'], '') = $id OR n.name = $id
+    DETACH DELETE n
+    """
+    with get_driver() as driver:
+        with driver.session() as session:
+            session.run(query, id=str(entity_id))
+            return {"status": "SUCCESS", "deleted_id": entity_id}
