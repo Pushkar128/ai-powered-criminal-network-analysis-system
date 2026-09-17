@@ -313,15 +313,14 @@ export default function IntelligenceChatbot({ nodesData = [], edgesData = [], ca
             <div ref={messagesEndRef} />
           </div>
 
-          {/* QUICK PROMPT SUGGESTION CHIPS */}
+          {/* QUICK PROMPT SUGGESTION CHIPS (WRAPPED ONTO MULTIPLE LINES - ZERO HORIZONTAL SCROLL) */}
           <div style={{
             padding: '8px 12px',
             background: '#0f172a',
             borderTop: '1px solid #1e293b',
             display: 'flex',
-            gap: '6px',
-            overflowX: 'auto',
-            whiteSpace: 'nowrap'
+            flexWrap: 'wrap',
+            gap: '6px'
           }}>
             <button
               onClick={() => handleSendMessage('Who is the kingpin?')}
