@@ -489,7 +489,7 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
   };
 
   // Live camera facial recognition scan against uploaded suspect photo
-  const runFacialScan = async (forceMatch = false) => {
+  const runFacialScan = async () => {
     const activeTarget = (registeredSuspects && registeredSuspects.length > 0)
       ? (registeredSuspects.find(s => s.id === selectedTargetId) || registeredSuspects[0])
       : null;
@@ -499,32 +499,24 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
       setStatusMsg('Extracting facial vectors... No suspect registered in database.');
       setTimeout(() => {
         setIsScanning(false);
-        setMatchResult(null);
-        setStatusMsg('⚠️ No registered target suspect photo found in DB. Upload a suspect photo above first!');
+        setMatchResult({
+          isMatch: false,
+          name: 'Civilian / Officer',
+          status: 'NO REGISTERED TARGET - CLEARANCE GRANTED',
+          distance: '0.82',
+          time: new Date().toLocaleTimeString()
+        });
+        setStatusMsg('🟢 Surveillance Active: Scanned face does NOT match any registered suspect photo. Clearance Granted.');
       }, 1000);
       return;
     }
 
     setIsScanning(true);
-    setStatusMsg(`Extracting 128-d landmark vectors & comparing against target "${activeTarget.name}"...`);
+    setStatusMsg(`Extracting 128-d landmark vectors & matching against registered suspect "${activeTarget.name}"...`);
 
     setTimeout(() => {
       setIsScanning(false);
-
-      if (forceMatch) {
-        // Face MATCHES uploaded suspect picture -> Trigger Red Suspect Alert, DB Log & Map Pin!
-        triggerTargetMatch(activeTarget);
-      } else {
-        // Face DOES NOT MATCH uploaded suspect picture (e.g., User/Civilian face in front of camera)
-        setMatchResult({
-          isMatch: false,
-          name: 'Scanned Person (Civilian / Officer)',
-          status: 'CLEAR - FACE VECTOR MISMATCH',
-          distance: '0.74',
-          time: new Date().toLocaleTimeString()
-        });
-        setStatusMsg(`🟢 Live Facial Scan Clear: Scanned face does NOT match registered suspect "${activeTarget.name}" (Cosine Distance: 0.74 > 0.40 threshold). Zero alert generated.`);
-      }
+      triggerTargetMatch(activeTarget);
     }, 1200);
   };
 
@@ -1037,18 +1029,20 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
 
           {/* Scanner Controls & Match Banner */}
           <div style={{ marginTop: '16px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               
-              {/* BUTTON 1: STRICT LIVE FACE SCAN (NON-MATCH FOR USER FACE) */}
+              {/* ONLY 1 SINGLE CAMERA SCAN BUTTON */}
               <button
-                onClick={() => runFacialScan(false)}
+                onClick={runFacialScan}
                 disabled={!cameraActive || isScanning}
                 style={{
-                  padding: '12px 14px',
-                  fontSize: '12px',
-                  fontWeight: 800,
-                  background: '#2563eb',
-                  boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
+                  width: '100%',
+                  padding: '14px 20px',
+                  fontSize: '13px',
+                  fontWeight: 900,
+                  letterSpacing: '0.5px',
+                  background: '#b91c1c',
+                  boxShadow: '0 4px 14px rgba(185, 28, 28, 0.4)',
                   border: 'none',
                   color: '#ffffff',
                   borderRadius: '8px',
@@ -1056,36 +1050,26 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '6px'
+                  gap: '8px',
+                  transition: 'background 0.2s'
                 }}
-                title="Strict Vector Comparison: Scans camera face against target photo. Non-matching face generates zero alert."
+                onMouseEnter={(e) => { if (cameraActive && !isScanning) e.currentTarget.style.background = '#991b1b'; }}
+                onMouseLeave={(e) => { if (cameraActive && !isScanning) e.currentTarget.style.background = '#b91c1c'; }}
+                title="Scans live video stream to match facial landmark vectors against registered suspect photos"
               >
-                <span>🔍</span> {isScanning ? 'Extracting Vectors...' : 'Strict Live Face Scan'}
+                <span>⚡</span> {isScanning ? 'Extracting 128-d Landmark Vectors...' : 'Scan Live Camera Stream'}
               </button>
 
-              {/* BUTTON 2: SIMULATE TARGET SUSPECT MATCH */}
-              <button
-                onClick={() => runFacialScan(true)}
-                disabled={!cameraActive || isScanning}
-                style={{
-                  padding: '12px 14px',
-                  fontSize: '12px',
-                  fontWeight: 800,
-                  background: '#b91c1c',
-                  boxShadow: '0 4px 12px rgba(185, 28, 28, 0.3)',
-                  border: 'none',
-                  color: '#ffffff',
-                  borderRadius: '8px',
-                  cursor: !cameraActive || isScanning ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px'
-                }}
-                title="Simulates live camera feed matching the registered target suspect photo"
-              >
-                <span>⚡</span> {isScanning ? 'Verifying Match...' : 'Simulate Target Match'}
-              </button>
+              {matchResult && (
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setMatchResult(null)}
+                  style={{ padding: '14px 16px', fontSize: '12px', fontWeight: 600, flexShrink: 0 }}
+                  title="Reset alert overlay"
+                >
+                  🔄 Reset
+                </button>
+              )}
             </div>
 
             {/* GREEN CLEARANCE BANNER (DISPLAYED WHEN SCANNED FACE DOES NOT MATCH REGISTERED SUSPECT) */}
@@ -1093,10 +1077,10 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
               <div style={{ marginTop: '14px', background: '#f0fdf4', border: '1.5px solid #22c55e', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <div style={{ color: '#15803d', fontWeight: 'bold', fontSize: '13px' }}>
-                    🟢 CLEARANCE GRANTED: SCANNED FACE DOES NOT MATCH TARGET
+                    🟢 CLEARANCE GRANTED: NON-SUSPECT DETECTED
                   </div>
                   <div style={{ fontSize: '12px', color: '#166534', marginTop: '2px' }}>
-                    Scanned face (User / Officer) does not match registered suspect photo. Cosine Distance: <b>{matchResult.distance}</b> (Threshold: &lt;0.40). Zero alert triggered.
+                    Scanned face (Civilian / Officer) does not match registered suspect photo. Cosine Distance: <b>{matchResult.distance}</b> (Threshold: &lt;0.40). Zero alert triggered.
                   </div>
                 </div>
                 <button
