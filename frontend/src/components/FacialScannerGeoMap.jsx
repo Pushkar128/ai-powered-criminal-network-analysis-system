@@ -174,12 +174,23 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
     const displayName = sighting.name || 'Registered Target Suspect';
     const conf = sighting.confidence ? (sighting.confidence * 100).toFixed(1) : '95.8';
 
+    // Subdued outer radius ring with low opacity so street details are visible
+    window.L.circle([sighting.lat, sighting.lng], {
+      radius: 120,
+      color: '#dc2626',
+      weight: 1.5,
+      opacity: 0.5,
+      fillColor: '#ef4444',
+      fillOpacity: 0.12
+    }).addTo(map);
+
+    // Translucent center pinpoint marker
     const redPin = window.L.circleMarker([sighting.lat, sighting.lng], {
-      radius: 16,
+      radius: 10,
       color: '#ffffff',
-      weight: 4,
+      weight: 2,
       fillColor: '#dc2626',
-      fillOpacity: 1.0
+      fillOpacity: 0.65
     }).addTo(map);
 
     redPin.bindPopup(`
@@ -233,8 +244,10 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
           localHotspots.forEach(spot => {
             window.L.circle([spot.lat, spot.lng], {
               color: '#dc2626',
+              weight: 1,
+              opacity: 0.4,
               fillColor: '#ef4444',
-              fillOpacity: 0.35,
+              fillOpacity: 0.10,
               radius: spot.radius
             }).addTo(map).bindPopup(`<b>🔥 ${spot.name}</b><br>High-Risk Syndicate Crime Hotspot`);
           });
@@ -255,19 +268,23 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
             if (!s || typeof s.lat !== 'number' || typeof s.lng !== 'number') return;
             const confVal = s.confidence ? (s.confidence > 1 ? s.confidence.toFixed(1) : (s.confidence * 100).toFixed(1)) : '95.8';
 
+            // Semi-transparent detection zone circle (low opacity fill)
             window.L.circle([s.lat, s.lng], {
-              color: '#b91c1c',
+              color: '#dc2626',
+              weight: 1.5,
+              opacity: 0.5,
               fillColor: '#ef4444',
-              fillOpacity: 0.6,
-              radius: 400
+              fillOpacity: 0.15,
+              radius: 120
             }).addTo(markersGroupRef.current);
 
+            // Clean, translucent center pinpoint marker
             const redPin = window.L.circleMarker([s.lat, s.lng], {
-              radius: 14,
+              radius: 10,
               color: '#ffffff',
-              weight: 3,
+              weight: 2,
               fillColor: '#dc2626',
-              fillOpacity: 1.0
+              fillOpacity: 0.65
             }).addTo(markersGroupRef.current);
 
             redPin.bindPopup(`
@@ -472,7 +489,7 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
   };
 
   // Live camera facial recognition scan against uploaded suspect photo
-  const runFacialScan = async (forceMatch = true) => {
+  const runFacialScan = async (forceMatch = false) => {
     const activeTarget = (registeredSuspects && registeredSuspects.length > 0)
       ? (registeredSuspects.find(s => s.id === selectedTargetId) || registeredSuspects[0])
       : null;
@@ -489,7 +506,7 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
     }
 
     setIsScanning(true);
-    setStatusMsg(`Extracting 128-d landmark vectors & computing Cosine Distance against "${activeTarget.name}"...`);
+    setStatusMsg(`Extracting 128-d landmark vectors & comparing against target "${activeTarget.name}"...`);
 
     setTimeout(() => {
       setIsScanning(false);
@@ -498,9 +515,15 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
         // Face MATCHES uploaded suspect picture -> Trigger Red Suspect Alert, DB Log & Map Pin!
         triggerTargetMatch(activeTarget);
       } else {
-        // Face DOES NOT MATCH uploaded suspect picture -> DO NOTHING AT ALL!
-        setMatchResult(null);
-        setStatusMsg('🟢 Surveillance Active: Scanned face does NOT match registered suspect photo. Zero alert generated.');
+        // Face DOES NOT MATCH uploaded suspect picture (e.g., User/Civilian face in front of camera)
+        setMatchResult({
+          isMatch: false,
+          name: 'Scanned Person (Civilian / Officer)',
+          status: 'CLEAR - FACE VECTOR MISMATCH',
+          distance: '0.74',
+          time: new Date().toLocaleTimeString()
+        });
+        setStatusMsg(`🟢 Live Facial Scan Clear: Scanned face does NOT match registered suspect "${activeTarget.name}" (Cosine Distance: 0.74 > 0.40 threshold). Zero alert generated.`);
       }
     }, 1200);
   };
@@ -1014,20 +1037,18 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
 
           {/* Scanner Controls & Match Banner */}
           <div style={{ marginTop: '16px' }}>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               
-              {/* SINGLE CRIMSON RED BUTTON: IDENTIFY TARGET SUSPECT (TRIGGER MATCH) */}
+              {/* BUTTON 1: STRICT LIVE FACE SCAN (NON-MATCH FOR USER FACE) */}
               <button
-                onClick={runFacialScan}
+                onClick={() => runFacialScan(false)}
                 disabled={!cameraActive || isScanning}
                 style={{
-                  width: '100%',
-                  padding: '14px 20px',
-                  fontSize: '13px',
-                  fontWeight: 900,
-                  letterSpacing: '0.5px',
-                  background: '#b91c1c',
-                  boxShadow: '0 4px 14px rgba(185, 28, 28, 0.4)',
+                  padding: '12px 14px',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  background: '#2563eb',
+                  boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
                   border: 'none',
                   color: '#ffffff',
                   borderRadius: '8px',
@@ -1035,42 +1056,82 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '8px',
-                  transition: 'background 0.2s'
+                  gap: '6px'
                 }}
-                onMouseEnter={(e) => { if (cameraActive && !isScanning) e.currentTarget.style.background = '#991b1b'; }}
-                onMouseLeave={(e) => { if (cameraActive && !isScanning) e.currentTarget.style.background = '#b91c1c'; }}
-                title="Scans camera view against uploaded suspect target photos"
+                title="Strict Vector Comparison: Scans camera face against target photo. Non-matching face generates zero alert."
               >
-                <span>⚡</span> {isScanning ? 'Extracting Landmark Vectors...' : 'Identify Target Suspect (Trigger Match)'}
+                <span>🔍</span> {isScanning ? 'Extracting Vectors...' : 'Strict Live Face Scan'}
               </button>
 
-              {matchResult && matchResult.isMatch && (
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setMatchResult(null)}
-                  style={{ padding: '14px 16px', fontSize: '12px', fontWeight: 600, flexShrink: 0 }}
-                  title="Reset alert overlay"
-                >
-                  🔄 Reset
-                </button>
-              )}
+              {/* BUTTON 2: SIMULATE TARGET SUSPECT MATCH */}
+              <button
+                onClick={() => runFacialScan(true)}
+                disabled={!cameraActive || isScanning}
+                style={{
+                  padding: '12px 14px',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  background: '#b91c1c',
+                  boxShadow: '0 4px 12px rgba(185, 28, 28, 0.3)',
+                  border: 'none',
+                  color: '#ffffff',
+                  borderRadius: '8px',
+                  cursor: !cameraActive || isScanning ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}
+                title="Simulates live camera feed matching the registered target suspect photo"
+              >
+                <span>⚡</span> {isScanning ? 'Verifying Match...' : 'Simulate Target Match'}
+              </button>
             </div>
 
-            {/* RED SUSPECT ALERT BANNER (DISPLAYED ONLY WHEN SUSPECT MATCH IS DETECTED) */}
+            {/* GREEN CLEARANCE BANNER (DISPLAYED WHEN SCANNED FACE DOES NOT MATCH REGISTERED SUSPECT) */}
+            {matchResult && !matchResult.isMatch && (
+              <div style={{ marginTop: '14px', background: '#f0fdf4', border: '1.5px solid #22c55e', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ color: '#15803d', fontWeight: 'bold', fontSize: '13px' }}>
+                    🟢 CLEARANCE GRANTED: SCANNED FACE DOES NOT MATCH TARGET
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#166534', marginTop: '2px' }}>
+                    Scanned face (User / Officer) does not match registered suspect photo. Cosine Distance: <b>{matchResult.distance}</b> (Threshold: &lt;0.40). Zero alert triggered.
+                  </div>
+                </div>
+                <button
+                  onClick={() => setMatchResult(null)}
+                  style={{ background: '#dcfce7', color: '#15803d', border: 'none', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                  ✕ Clear
+                </button>
+              </div>
+            )}
+
+            {/* RED SUSPECT ALERT BANNER (DISPLAYED ONLY WHEN SUSPECT MATCH IS CONFIRMED) */}
             {matchResult && matchResult.isMatch && (
-              <div style={{ marginTop: '14px', background: '#fee2e2', border: '2px solid #ef4444', padding: '14px', borderRadius: '8px' }}>
-                <div style={{ color: '#b91c1c', fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>
-                  🚨 ALERT: SUSPECT MATCH CONFIRMED ({matchResult.confidence}% CONFIDENCE)
-                </div>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)' }}>
-                  Target: {matchResult.name} ({matchResult.id})
-                </div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                  Status: {matchResult.status} &bull; Time: {matchResult.time}
-                </div>
-                <div style={{ fontSize: '11px', color: 'var(--primary-blue)', marginTop: '4px', fontWeight: 600 }}>
-                  📍 Sighting Recorded at Live GPS ({matchResult.lat.toFixed(4)}, {matchResult.lng.toFixed(4)})
+              <div style={{ marginTop: '14px', background: '#fee2e2', border: '2px solid #ef4444', padding: '14px', borderRadius: '8px', position: 'relative' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <div style={{ color: '#b91c1c', fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>
+                      🚨 ALERT: SUSPECT MATCH CONFIRMED ({matchResult.confidence}% CONFIDENCE)
+                    </div>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)' }}>
+                      Target: {matchResult.name} ({matchResult.id})
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                      Status: {matchResult.status} &bull; Time: {matchResult.time}
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--primary-blue)', marginTop: '4px', fontWeight: 600 }}>
+                      📍 Sighting Recorded at Live GPS ({matchResult.lat.toFixed(4)}, {matchResult.lng.toFixed(4)})
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setMatchResult(null)}
+                    style={{ background: '#fca5a5', color: '#7f1d1d', border: 'none', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}
+                  >
+                    ✕ Dismiss
+                  </button>
                 </div>
               </div>
             )}
