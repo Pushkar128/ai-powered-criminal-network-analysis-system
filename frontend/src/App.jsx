@@ -831,6 +831,31 @@ function App() {
         isOpen={uploadModalOpen}
         onClose={() => setUploadModalOpen(false)}
         onRefreshGraph={() => fetchGraphData(selectedCase)}
+        onUploadPdfSuccess={({ caseId, caseTitle, nodes, edges }) => {
+          const newCaseEntry = {
+            case_id: caseId,
+            title: caseTitle || `Case #${caseId}: FIR PDF Intelligence Cluster`,
+            node_count: nodes ? nodes.length : 8,
+            is_dataset: false
+          };
+
+          setCasesList(prev => {
+            const exists = (prev || []).some(c => c.case_id === caseId);
+            if (exists) return prev;
+            return [newCaseEntry, ...(prev || [])];
+          });
+
+          if (nodes && nodes.length > 0) {
+            setNodesData(nodes);
+          }
+          if (edges && edges.length > 0) {
+            setEdgesData(edges);
+          }
+
+          setSelectedCase(caseId);
+          setActiveTab('graph-tab');
+          setUploadModalOpen(false);
+        }}
       />
 
       <ChainOfCustodyAudit
