@@ -4,16 +4,20 @@ export default function Navbar({ nodesData, onSelectNode, isApiConnected, onOpen
   const [searchQuery, setSearchQuery] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const filteredMatches = searchQuery.trim()
-    ? nodesData.filter(n =>
-        n.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        n.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (n.alias && n.alias.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
+  const q = (searchQuery || '').toLowerCase().trim();
+  const filteredMatches = q && Array.isArray(nodesData)
+    ? nodesData.filter(n => {
+        if (!n) return false;
+        const nameStr = (n.name || n.label || n.title || '').toString().toLowerCase();
+        const idStr = (n.id || '').toString().toLowerCase();
+        const aliasStr = (n.alias || '').toString().toLowerCase();
+        const phoneStr = (n.phone || '').toString().toLowerCase();
+        return nameStr.includes(q) || idStr.includes(q) || aliasStr.includes(q) || phoneStr.includes(q);
+      })
     : [];
 
   const handleSelect = (node) => {
-    onSelectNode(node);
+    if (onSelectNode) onSelectNode(node);
     setSearchQuery('');
     setDropdownOpen(false);
   };

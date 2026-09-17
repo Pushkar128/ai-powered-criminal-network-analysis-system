@@ -145,66 +145,78 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
       
       let map = leafletMapRef.current;
       if (!map) {
-        // Initialize map ONCE centered on user GPS ( Hyderabad / India )
-        map = window.L.map(mapContainerRef.current).setView([userGps.lat, userGps.lng], 13);
-        leafletMapRef.current = map;
+        if (mapContainerRef.current._leaflet_id) {
+          mapContainerRef.current._leaflet_id = null;
+        }
+        try {
+          map = window.L.map(mapContainerRef.current).setView([userGps?.lat || 28.6139, userGps?.lng || 77.2090], 13);
+          leafletMapRef.current = map;
 
-        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; OpenStreetMap contributors',
-          maxZoom: 19
-        }).addTo(map);
+          window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19
+          }).addTo(map);
 
-        // Hotspots
-        const localHotspots = [
-          { name: 'Secunderabad Syndicate Hideout', lat: userGps.lat + 0.015, lng: userGps.lng - 0.02, radius: 1200 },
-          { name: 'Malkajgiri Financial Shell Hub', lat: userGps.lat - 0.012, lng: userGps.lng + 0.018, radius: 950 },
-          { name: 'Hyderabad Port Transfer Zone', lat: userGps.lat + 0.008, lng: userGps.lng + 0.025, radius: 800 }
-        ];
+          const localHotspots = [
+            { name: 'Secunderabad Syndicate Hideout', lat: (userGps?.lat || 28.6139) + 0.015, lng: (userGps?.lng || 77.2090) - 0.02, radius: 1200 },
+            { name: 'Malkajgiri Financial Shell Hub', lat: (userGps?.lat || 28.6139) - 0.012, lng: (userGps?.lng || 77.2090) + 0.018, radius: 950 },
+            { name: 'Hyderabad Port Transfer Zone', lat: (userGps?.lat || 28.6139) + 0.008, lng: (userGps?.lng || 77.2090) + 0.025, radius: 800 }
+          ];
 
-        localHotspots.forEach(spot => {
-          window.L.circle([spot.lat, spot.lng], {
-            color: '#dc2626',
-            fillColor: '#ef4444',
-            fillOpacity: 0.35,
-            radius: spot.radius
-          }).addTo(map).bindPopup(`<b>🔥 ${spot.name}</b><br>High-Risk Syndicate Crime Hotspot`);
-        });
-
-        // Map tile layer initialized
+          localHotspots.forEach(spot => {
+            window.L.circle([spot.lat, spot.lng], {
+              color: '#dc2626',
+              fillColor: '#ef4444',
+              fillOpacity: 0.35,
+              radius: spot.radius
+            }).addTo(map).bindPopup(`<b>🔥 ${spot.name}</b><br>High-Risk Syndicate Crime Hotspot`);
+          });
+        } catch (e) {
+          console.warn('Leaflet map init caught error:', e);
+          return;
+        }
       }
 
-      // Manage marker pins in layer group so user manual zoom is preserved!
-      if (!markersGroupRef.current) {
-        markersGroupRef.current = window.L.layerGroup().addTo(map);
+      try {
+        if (!markersGroupRef.current && map) {
+          markersGroupRef.current = window.L.layerGroup().addTo(map);
+        }
+        if (markersGroupRef.current) {
+          markersGroupRef.current.clearLayers();
+
+          (activeSessionSightings || []).forEach((s) => {
+            if (!s || typeof s.lat !== 'number' || typeof s.lng !== 'number') return;
+            const confVal = s.confidence ? (s.confidence > 1 ? s.confidence.toFixed(1) : (s.confidence * 100).toFixed(1)) : '95.8';
+
+            window.L.circle([s.lat, s.lng], {
+              color: '#b91c1c',
+              fillColor: '#ef4444',
+              fillOpacity: 0.6,
+              radius: 400
+            }).addTo(markersGroupRef.current);
+
+            const redPin = window.L.circleMarker([s.lat, s.lng], {
+              radius: 14,
+              color: '#ffffff',
+              weight: 3,
+              fillColor: '#dc2626',
+              fillOpacity: 1.0
+            }).addTo(markersGroupRef.current);
+
+            redPin.bindPopup(`
+              <div style="font-family: sans-serif; font-size: 12px; padding: 4px; text-align: center;">
+                <b style="color: #dc2626; font-size: 14px;">📍 LIVE SUSPECT SIGHTING</b><br/>
+                <span style="font-size: 13px; font-weight: bold; color: #0f172a;">${s.name || 'Registered Target Suspect'}</span><br/>
+                <span style="color: #2563eb; font-weight: bold;">Camera GPS: ${s.location_name || 'Live Location'}</span><br/>
+                <span style="color: #16a34a; font-weight: bold;">Match Confidence: ${confVal}%</span><br/>
+                <small style="color: #64748b;">${s.timestamp || ''}</small>
+              </div>
+            `);
+          });
+        }
+      } catch (e) {
+        console.warn('Leaflet markers update caught error:', e);
       }
-      markersGroupRef.current.clearLayers();
-
-      activeSessionSightings.forEach((s) => {
-        window.L.circle([s.lat, s.lng], {
-          color: '#b91c1c',
-          fillColor: '#ef4444',
-          fillOpacity: 0.6,
-          radius: 400
-        }).addTo(markersGroupRef.current);
-
-        const redPin = window.L.circleMarker([s.lat, s.lng], {
-          radius: 14,
-          color: '#ffffff',
-          weight: 3,
-          fillColor: '#dc2626',
-          fillOpacity: 1.0
-        }).addTo(markersGroupRef.current);
-
-        redPin.bindPopup(`
-          <div style="font-family: sans-serif; font-size: 12px; padding: 4px; text-align: center;">
-            <b style="color: #dc2626; font-size: 14px;">📍 LIVE SUSPECT SIGHTING</b><br/>
-            <span style="font-size: 13px; font-weight: bold; color: #0f172a;">${s.name}</span><br/>
-            <span style="color: #2563eb; font-weight: bold;">Camera GPS: ${s.location_name}</span><br/>
-            <span style="color: #16a34a; font-weight: bold;">Match Confidence: ${(s.confidence * 100).toFixed(1)}%</span><br/>
-            <small style="color: #64748b;">${s.timestamp}</small>
-          </div>
-        `);
-      });
     };
 
     if (window.L) {
@@ -364,14 +376,22 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
     setTimeout(async () => {
       setIsScanning(false);
       
-      const activeTarget = registeredSuspects.find(s => s.id === selectedTargetId) || registeredSuspects[0];
+      const activeTarget = (registeredSuspects && registeredSuspects.length > 0)
+        ? (registeredSuspects.find(s => s.id === selectedTargetId) || registeredSuspects[0])
+        : null;
+
       if (!activeTarget) {
         runNonSuspectScan();
         return;
       }
+
       const targetName = activeTarget.name || 'Registered Target Suspect';
-      const targetId = activeTarget.id;
-      const locName = customLocationName.trim() || `Live Camera (${userGps.lat.toFixed(4)}, ${userGps.lng.toFixed(4)})`;
+      const targetId = activeTarget.id || 'PER_FACE_TARGET';
+      const latVal = (userGps && typeof userGps.lat === 'number') ? userGps.lat : 28.6139;
+      const lngVal = (userGps && typeof userGps.lng === 'number') ? userGps.lng : 77.2090;
+      const locName = (customLocationName && customLocationName.trim()) 
+        ? customLocationName.trim() 
+        : `Live Camera (${latVal.toFixed(4)}, ${lngVal.toFixed(4)})`;
 
       const match = {
         isMatch: true,
@@ -380,8 +400,8 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
         confidence: 95.8,
         status: 'WANTED - HIGH PRIORITY TARGET',
         time: new Date().toLocaleTimeString(),
-        lat: userGps.lat,
-        lng: userGps.lng,
+        lat: latVal,
+        lng: lngVal,
         location_name: locName
       };
       setMatchResult(match);
@@ -391,15 +411,15 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
         id: `SIGHT_LIVE_${Date.now().toString().slice(-4)}`,
         suspect_id: match.id,
         name: match.name,
-        lat: userGps.lat,
-        lng: userGps.lng,
+        lat: latVal,
+        lng: lngVal,
         location_name: locName,
         confidence: 0.958,
         timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19)
       };
 
       // Add to active session sightings so red popup pin renders on live map
-      setActiveSessionSightings(prev => [newSighting, ...prev]);
+      setActiveSessionSightings(prev => [newSighting, ...(prev || [])]);
 
       // Log sighting to backend API for persistent history archive
       try {
@@ -409,8 +429,8 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
           body: JSON.stringify({
             suspect_id: match.id,
             suspect_name: match.name,
-            lat: userGps.lat,
-            lng: userGps.lng,
+            lat: latVal,
+            lng: lngVal,
             location_name: locName,
             confidence: 0.958
           })

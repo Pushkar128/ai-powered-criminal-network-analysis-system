@@ -95,6 +95,16 @@ export default function NetworkTopology({ nodesData, edgesData, selectedNode, on
     };
   }, []);
 
+  // Auto-center canvas on selected node when searched or clicked
+  useEffect(() => {
+    if (selectedNode && typeof selectedNode.x === 'number' && typeof selectedNode.y === 'number') {
+      setPan({
+        x: (300 - selectedNode.x) * scale,
+        y: (220 - selectedNode.y) * scale
+      });
+    }
+  }, [selectedNode, scale]);
+
   // Main Render Effect
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -159,6 +169,7 @@ export default function NetworkTopology({ nodesData, edgesData, selectedNode, on
       const ny = node.y !== undefined ? node.y : 220;
       const radius = Math.max(16, Math.min(32, node.size || (16 + ((node.threat_score || node.degree || 5) * 0.3))));
       const color = getNodeColor(node);
+      const isSelected = selectedNode && selectedNode.id === node.id;
 
       if ((node.threat_score || 0) >= 80 || node.is_high_risk) {
         ctx.beginPath();
@@ -167,12 +178,26 @@ export default function NetworkTopology({ nodesData, edgesData, selectedNode, on
         ctx.fill();
       }
 
+      // Selection Halo
+      if (isSelected) {
+        ctx.beginPath();
+        ctx.arc(nx, ny, radius + 14, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(nx, ny, radius + 7, 0, Math.PI * 2);
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+      }
+
       ctx.beginPath();
       ctx.arc(nx, ny, radius, 0, Math.PI * 2);
       ctx.fillStyle = color;
       ctx.fill();
-      ctx.lineWidth = selectedNode && selectedNode.id === node.id ? 4 : 2;
-      ctx.strokeStyle = selectedNode && selectedNode.id === node.id ? '#0f172a' : '#ffffff';
+      ctx.lineWidth = isSelected ? 4 : 2;
+      ctx.strokeStyle = isSelected ? '#0f172a' : '#ffffff';
       ctx.stroke();
 
       // Clear dark slate label text on light background with 2-line wrapping for long news titles
