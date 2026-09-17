@@ -24,8 +24,9 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
   const [activeSessionSightings, setActiveSessionSightings] = useState([]);
   
   const [hotspots, setHotspots] = useState([]);
-  const [userGps, setUserGps] = useState({ lat: 17.4556, lng: 78.5634 }); // Default Hyderabad region
-  const [customLocationName, setCustomLocationName] = useState('Live Camera Location');
+  const [userGps, setUserGps] = useState({ lat: 28.6139, lng: 77.2090 }); // Central Police Checkpoint Alpha
+  const [customLocationName, setCustomLocationName] = useState('Central Surveillance Checkpoint #04');
+  const [subjectCategory, setSubjectCategory] = useState('civilian'); // 'civilian' | 'suspect'
   const [statusMsg, setStatusMsg] = useState('');
   const [logTab, setLogTab] = useState('history'); // 'history' | 'live'
 
@@ -72,11 +73,10 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
         }
       })
       .catch(() => {
-        const defaultTargets = [
+        setRegisteredSuspects([
           { id: 'PER_1001', name: 'Rashid Khan @Bhai', alias: 'Shadow King', registered_at: '2026-09-17' },
           { id: 'PER_1002', name: 'Vikram Singh', alias: 'Vicky Operator', registered_at: '2026-09-17' }
-        ];
-        setRegisteredSuspects(defaultTargets);
+        ]);
         setSelectedTargetId('PER_1001');
       });
   };
@@ -85,20 +85,6 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
     fetchHeatmap();
     fetchRegisteredSuspects();
     const pollInterval = setInterval(fetchHeatmap, 3000); // Poll every 3s
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          setUserGps({ lat, lng });
-          setCustomLocationName(`Camera Checkpoint (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
-        },
-        () => {},
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    }
-
     return () => clearInterval(pollInterval);
   }, []);
 
@@ -190,14 +176,7 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
           }).addTo(map).bindPopup(`<b>🔥 ${spot.name}</b><br>High-Risk Syndicate Crime Hotspot`);
         });
 
-        // User Marker
-        const userMarker = window.L.circleMarker([userGps.lat, userGps.lng], {
-          radius: 8,
-          color: '#1d4ed8',
-          fillColor: '#60a5fa',
-          fillOpacity: 0.9
-        }).addTo(map);
-        userMarker.bindPopup(`<b>📍 Live Laptop Camera Location</b><br>(${userGps.lat.toFixed(4)}, ${userGps.lng.toFixed(4)})`);
+        // Map tile layer initialized
       }
 
       // Manage marker pins in layer group so user manual zoom is preserved!
@@ -678,44 +657,58 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
 
           {/* Scanner Controls & Match Banner */}
           <div style={{ marginTop: '16px' }}>
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              <button
-                className="btn btn-secondary"
-                onClick={runNonSuspectScan}
-                disabled={!cameraActive || isScanning}
-                style={{
-                  flex: 1,
-                  padding: '10px 12px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  background: '#059669',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: !cameraActive || isScanning ? 'not-allowed' : 'pointer'
-                }}
-              >
-                🟢 Scan Officer / Civilian Face (Non-Suspect)
-              </button>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: '180px' }}>
+                <select
+                  value={subjectCategory}
+                  onChange={(e) => setSubjectCategory(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--border-color)',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    background: subjectCategory === 'suspect' ? '#fef2f2' : '#f0fdf4',
+                    color: subjectCategory === 'suspect' ? '#dc2626' : '#16a34a',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="civilian">🟢 Civilian / Officer (Non-Suspect)</option>
+                  <option value="suspect">
+                    🚨 Target Suspect ({registeredSuspects.find(s => s.id === selectedTargetId)?.name || 'Rashid Khan @Bhai'})
+                  </option>
+                </select>
+              </div>
 
               <button
                 className="btn btn-primary"
-                onClick={runFacialScan}
+                onClick={() => {
+                  if (subjectCategory === 'civilian') {
+                    runNonSuspectScan();
+                  } else {
+                    runFacialScan();
+                  }
+                }}
                 disabled={!cameraActive || isScanning}
                 style={{
                   flex: 1,
-                  padding: '10px 12px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
-                  boxShadow: '0 4px 14px rgba(220, 38, 38, 0.4)',
+                  padding: '10px 14px',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                  background: subjectCategory === 'suspect' 
+                    ? 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)' 
+                    : 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                  boxShadow: subjectCategory === 'suspect' 
+                    ? '0 4px 14px rgba(220, 38, 38, 0.4)' 
+                    : '0 4px 14px rgba(37, 99, 235, 0.3)',
                   border: 'none',
                   color: '#ffffff',
                   borderRadius: '6px',
                   cursor: !cameraActive || isScanning ? 'not-allowed' : 'pointer'
                 }}
               >
-                {isScanning ? 'Extracting Landmarks...' : '🚨 Identify Target Suspect (Trigger Match)'}
+                {isScanning ? 'Extracting Landmarks...' : '⚡ Trigger Facial Scan'}
               </button>
 
               {matchResult && matchResult.isMatch && (
