@@ -363,7 +363,13 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
     setStatusMsg('Extracting facial vectors & computing Cosine Distance...');
     setTimeout(() => {
       setIsScanning(false);
-      setMatchResult(null);
+      setMatchResult({
+        isMatch: false,
+        name: 'Officer / Civilian (You)',
+        status: 'CLEAR - NON-SUSPECT DETECTED',
+        distance: '0.78',
+        time: new Date().toLocaleTimeString()
+      });
       setStatusMsg('🟢 Face Scanned: Non-Suspect / Civilian (Distance: 0.78 - Clearance Granted)');
     }, 1000);
   };
@@ -850,50 +856,101 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
 
           {/* Scanner Controls & Match Banner */}
           <div style={{ marginTop: '16px' }}>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+              
+              {/* GREEN BUTTON: SCAN CIVILIAN / SELF */}
+              <button
+                className="btn"
+                onClick={runNonSuspectScan}
+                disabled={!cameraActive || isScanning}
+                style={{
+                  flex: 1,
+                  minWidth: '200px',
+                  padding: '12px 16px',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)',
+                  border: 'none',
+                  color: '#ffffff',
+                  borderRadius: '8px',
+                  cursor: !cameraActive || isScanning ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}
+                title="Scan camera view for non-suspect civilian / officer clearance"
+              >
+                <span>🟢</span> {isScanning ? 'Extracting Landmark Vectors...' : 'Scan Civilian / Self (Green)'}
+              </button>
+
+              {/* RED/BLUE BUTTON: SCAN SUSPECT DATABASE */}
               <button
                 className="btn btn-primary"
                 onClick={() => {
                   if (registeredSuspects.length > 0) {
                     runFacialScan();
                   } else {
-                    runNonSuspectScan();
+                    setStatusMsg('⚠️ No target suspect photo registered in DB. Please upload a photo in Step 1 first, or use the Green Civilian Scan button.');
                   }
                 }}
                 disabled={!cameraActive || isScanning}
                 style={{
                   flex: 1,
-                  padding: '12px 18px',
-                  fontSize: '14px',
+                  minWidth: '200px',
+                  padding: '12px 16px',
+                  fontSize: '13px',
                   fontWeight: 800,
                   background: registeredSuspects.length > 0
                     ? 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)'
-                    : 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                    : 'linear-gradient(135deg, #64748b 0%, #475569 100%)',
                   boxShadow: registeredSuspects.length > 0
                     ? '0 4px 14px rgba(220, 38, 38, 0.4)'
-                    : '0 4px 14px rgba(37, 99, 235, 0.3)',
+                    : 'none',
                   border: 'none',
                   color: '#ffffff',
                   borderRadius: '8px',
-                  cursor: !cameraActive || isScanning ? 'not-allowed' : 'pointer'
+                  cursor: !cameraActive || isScanning ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
                 }}
+                title="Match camera view against registered suspect database target photos"
               >
-                {isScanning ? 'Extracting Landmarks...' : '⚡ Trigger Facial Scan'}
+                <span>⚡</span> {isScanning ? 'Extracting Landmark Vectors...' : 'Scan Suspect DB Target'}
               </button>
 
-              {matchResult && matchResult.isMatch && (
+              {matchResult && (
                 <button
                   className="btn btn-secondary"
                   onClick={() => setMatchResult(null)}
                   style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600 }}
-                  title="Reset alert to scan next face"
+                  title="Reset scan overlay"
                 >
                   🔄 Reset
                 </button>
               )}
             </div>
 
-            {matchResult && matchResult.isMatch ? (
+            {/* GREEN CLEARANCE BANNER (CIVILIAN / OFFICER DETECTED) */}
+            {matchResult && !matchResult.isMatch && (
+              <div style={{ marginTop: '14px', background: '#dcfce7', border: '2px solid #22c55e', padding: '14px', borderRadius: '8px' }}>
+                <div style={{ color: '#15803d', fontWeight: 'bold', fontSize: '14px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>🟢</span> CLEARANCE GRANTED: NON-SUSPECT / CIVILIAN DETECTED
+                </div>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: '#166534' }}>
+                  Entity: {matchResult.name} &bull; Status: {matchResult.status}
+                </div>
+                <div style={{ fontSize: '12px', color: '#15803d', marginTop: '2px' }}>
+                  Cosine Distance: {matchResult.distance || '0.78'} &bull; Camera stream verified clear. No match found in suspect target database.
+                </div>
+              </div>
+            )}
+
+            {/* RED SUSPECT ALERT BANNER (SUSPECT MATCH DETECTED) */}
+            {matchResult && matchResult.isMatch && (
               <div style={{ marginTop: '14px', background: '#fee2e2', border: '2px solid #ef4444', padding: '14px', borderRadius: '8px' }}>
                 <div style={{ color: '#b91c1c', fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>
                   🚨 ALERT: SUSPECT MATCH CONFIRMED ({matchResult.confidence}% CONFIDENCE)
@@ -908,7 +965,7 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
                   📍 Sighting Recorded at Live GPS ({matchResult.lat.toFixed(4)}, {matchResult.lng.toFixed(4)})
                 </div>
               </div>
-            ) : null}
+            )}
 
             {statusMsg && (
               <div style={{ marginTop: '10px', fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic' }}>

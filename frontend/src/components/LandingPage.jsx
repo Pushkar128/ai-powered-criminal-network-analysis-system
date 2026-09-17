@@ -179,6 +179,77 @@ export default function LandingPage({ onEnterPortal, onAdminLogin }) {
           </div>
         </div>
 
+        {/* PROJECT OVERVIEW & CORE INTELLIGENCE MODULES DETAILED SECTION */}
+        <div style={{ background: 'rgba(30, 41, 59, 0.6)', border: '1px solid #334155', borderRadius: '16px', padding: '36px', width: '100%', marginBottom: '40px', textAlign: 'left' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+            <span style={{ fontSize: '24px' }}>📌</span>
+            <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#ffffff', margin: 0 }}>
+              Project Architecture & Key Capabilities Overview
+            </h2>
+          </div>
+          <p style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: 1.7, marginBottom: '24px' }}>
+            The <b>NCRB Intelligence Portal</b> is a next-generation AI-powered criminal network analysis platform developed for <b>Smart India Hackathon (SIH 2026) Problem Statement #26189</b>. Built specifically for law enforcement agencies, the Ministry of Home Affairs, and central intelligence command centers, the platform converts raw multi-source crime data into actionable intelligence graph models.
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+            
+            <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '12px', padding: '20px' }}>
+              <div style={{ color: '#38bdf8', fontWeight: 800, fontSize: '15px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>🕸️</span> 1. Direct 1-Hop Network Topology Visualizer
+              </div>
+              <p style={{ fontSize: '12.5px', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                Renders multi-pivot graph topologies mapping suspects, CDR call records, getaway vehicles, hideouts, and shell organizations. Features 1-hop direct subgraph isolation to unmask specific targets with zero crossing edge clutter.
+              </p>
+            </div>
+
+            <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '12px', padding: '20px' }}>
+              <div style={{ color: '#ef4444', fontWeight: 800, fontSize: '15px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>📷</span> 2. Facial Scanner & Live GPS Heatmap
+              </div>
+              <p style={{ fontSize: '12.5px', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                128-dimensional facial landmark vector extraction matching registered suspect target photos against live camera streams, featuring real-time OpenStreetMap GPS sighting pins and nationwide checkpoint alerts.
+              </p>
+            </div>
+
+            <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '12px', padding: '20px' }}>
+              <div style={{ color: '#f59e0b', fontWeight: 800, fontSize: '15px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>🎯</span> 3. Kingpin & Dark Money Analytics
+              </div>
+              <p style={{ fontSize: '12.5px', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                Automated PageRank centrality scoring to identify top syndicate handlers and criminal network bottlenecks, alongside circular transaction algorithms for unmasking shell organization money laundering loops.
+              </p>
+            </div>
+
+            <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '12px', padding: '20px' }}>
+              <div style={{ color: '#10b981', fontWeight: 800, fontSize: '15px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>🛤️</span> 4. Shortest Path & Bottleneck Tracer
+              </div>
+              <p style={{ fontSize: '12.5px', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                Breadth-First Search (BFS) graph pathfinding to discover hidden association chains and financial mule paths between any two target entities across massive multi-thousand node datasets.
+              </p>
+            </div>
+
+            <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '12px', padding: '20px' }}>
+              <div style={{ color: '#ab47bc', fontWeight: 800, fontSize: '15px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>📰</span> 5. OSINT News Feed & Case Updates
+              </div>
+              <p style={{ fontSize: '12.5px', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                Real-time ingestion of unstructured crime news text with automated Natural Language Entity Extraction, connecting newly spotted suspects, vehicles, and hideouts directly into active case graphs.
+              </p>
+            </div>
+
+            <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '12px', padding: '20px' }}>
+              <div style={{ color: '#38bdf8', fontWeight: 800, fontSize: '15px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>🛡️</span> 6. Senior Command Admin Override
+              </div>
+              <p style={{ fontSize: '12.5px', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                Role-based access control giving senior police commanders nationwide live suspect sighting briefing popups, target DB photo management, and chain-of-custody audit logging.
+              </p>
+            </div>
+
+          </div>
+        </div>
+
         {/* SYSTEM STATUS FOOTER CARD */}
         <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', padding: '20px 28px', width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
           <div style={{ textAlign: 'left' }}>
