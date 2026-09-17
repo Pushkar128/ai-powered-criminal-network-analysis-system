@@ -65,20 +65,13 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
           setRegisteredSuspects(data.suspects);
           setSelectedTargetId(prev => prev || data.suspects[0].id);
         } else {
-          const defaultTargets = [
-            { id: 'PER_1001', name: 'Rashid Khan @Bhai', alias: 'Shadow King', registered_at: '2026-09-17' },
-            { id: 'PER_1002', name: 'Vikram Singh', alias: 'Vicky Operator', registered_at: '2026-09-17' }
-          ];
-          setRegisteredSuspects(defaultTargets);
-          setSelectedTargetId('PER_1001');
+          setRegisteredSuspects([]);
+          setSelectedTargetId(null);
         }
       })
       .catch(() => {
-        setRegisteredSuspects([
-          { id: 'PER_1001', name: 'Rashid Khan @Bhai', alias: 'Shadow King', registered_at: '2026-09-17' },
-          { id: 'PER_1002', name: 'Vikram Singh', alias: 'Vicky Operator', registered_at: '2026-09-17' }
-        ]);
-        setSelectedTargetId('PER_1001');
+        setRegisteredSuspects([]);
+        setSelectedTargetId(null);
       });
   };
 
@@ -490,41 +483,71 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
                 ⚠️ High Priority Alert: Below are active registered suspect targets and their last recorded AI camera sighting locations:
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ fontSize: '14px', fontWeight: '800', color: '#dc2626' }}>
-                      👤 Rashid Khan @Bhai (PER_1001)
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#0f172a', fontWeight: 700, marginTop: '2px' }}>
-                      📍 Last Seen: <span style={{ color: '#2563eb' }}>Central Surveillance Checkpoint #04</span>
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
-                      GPS: (28.6139, 77.2090) &bull; Confidence: <b style={{ color: '#16a34a' }}>95.8% Match</b>
-                    </div>
-                  </div>
-                  <span className="badge badge-high" style={{ fontSize: '11px', padding: '4px 8px' }}>
-                    WANTED TARGET
-                  </span>
-                </div>
+              {registeredSuspects.length > 0 || allSightings.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {registeredSuspects.map((s, idx) => {
+                    const sightingMatch = allSightings.find(st => st.suspect_id === s.id) || {
+                      lat: userGps.lat + (idx * 0.005),
+                      lng: userGps.lng + (idx * 0.005),
+                      location_name: customLocationName,
+                      confidence: 0.958,
+                      timestamp: 'Live Camera Surveillance Stream'
+                    };
 
-                <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ fontSize: '14px', fontWeight: '800', color: '#dc2626' }}>
-                      👤 Vikram Singh (PER_1002)
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#0f172a', fontWeight: 700, marginTop: '2px' }}>
-                      📍 Last Seen: <span style={{ color: '#2563eb' }}>Secunderabad Syndicate Hideout</span>
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
-                      GPS: (28.6289, 77.1890) &bull; Confidence: <b style={{ color: '#16a34a' }}>88.4% Match</b>
-                    </div>
-                  </div>
-                  <span className="badge badge-high" style={{ fontSize: '11px', padding: '4px 8px' }}>
-                    WANTED TARGET
-                  </span>
+                    return (
+                      <div key={s.id} style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                        <div>
+                          <div style={{ fontSize: '14px', fontWeight: '800', color: '#dc2626' }}>
+                            👤 {s.name} ({s.id})
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#0f172a', fontWeight: 700, marginTop: '2px' }}>
+                            📍 Last Seen: <span style={{ color: '#2563eb' }}>{sightingMatch.location_name}</span>
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                            GPS: ({sightingMatch.lat.toFixed(4)}, {sightingMatch.lng.toFixed(4)}) &bull; Confidence: <b style={{ color: '#16a34a' }}>{((sightingMatch.confidence || 0.95) * 100).toFixed(1)}% Match</b>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setShowAdminPopup(false);
+                            focusSightingOnMap({
+                              lat: sightingMatch.lat,
+                              lng: sightingMatch.lng,
+                              name: s.name,
+                              location_name: sightingMatch.location_name,
+                              confidence: sightingMatch.confidence || 0.958,
+                              timestamp: sightingMatch.timestamp
+                            });
+                          }}
+                          style={{
+                            background: '#2563eb',
+                            color: '#ffffff',
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            fontSize: '11px',
+                            fontWeight: '700',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            boxShadow: '0 2px 6px rgba(37,99,235,0.3)'
+                          }}
+                          title="Pan map & zoom directly to this suspect's sighting pin"
+                        >
+                          📍 Open Sighting Pin on Map
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
+              ) : (
+                <div style={{ padding: '16px', background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: '8px', textAlign: 'center', color: '#64748b', fontSize: '12px' }}>
+                  ℹ️ <b>No suspect targets registered yet.</b><br />
+                  Please enter a suspect name and click <b>"Upload & Register Photo"</b> above to add targets for facial recognition and GPS map tracking.
+                </div>
+              )}
             </div>
 
             <div style={{ background: '#f1f5f9', padding: '14px 24px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -536,7 +559,7 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
                 onClick={() => setShowAdminPopup(false)}
                 style={{ background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: '6px', fontWeight: 800, fontSize: '12px', cursor: 'pointer' }}
               >
-                📍 Inspect Sighting Pins on Geo-Map
+                📍 Close Briefing & View Map
               </button>
             </div>
           </div>

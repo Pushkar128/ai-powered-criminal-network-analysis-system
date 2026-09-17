@@ -36,7 +36,7 @@ export default function Navbar({ nodesData, onSelectNode, isApiConnected, onOpen
 
       <div className="search-container" style={{ width: '460px', position: 'relative' }}>
         <div className="search-input-wrapper" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '8px', padding: '5px 12px', display: 'flex', alignItems: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
-          <svg className="search-icon" viewBox="0 0 24 24" style={{ width: '18px', height: '18px', color: '#38bdf8', marginRight: '8px' }}><path fill="currentColor" d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          <svg viewBox="0 0 24 24" style={{ width: '18px', height: '18px', color: '#38bdf8', marginRight: '8px', flexShrink: 0 }}><path fill="currentColor" d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
           <input
             type="text"
             placeholder="Search suspect name, alias, phone, vehicle, location..."
@@ -48,8 +48,25 @@ export default function Navbar({ nodesData, onSelectNode, isApiConnected, onOpen
             onFocus={() => setDropdownOpen(true)}
             style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', fontSize: '13px', outline: 'none', fontWeight: '500' }}
           />
-          <button style={{ background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#fff', border: 'none', borderRadius: '6px', padding: '5px 14px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 6px rgba(37,99,235,0.4)' }}>
-            <span>🔍</span> Search
+          <button 
+            style={{ 
+              background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', 
+              color: '#fff', 
+              border: 'none', 
+              borderRadius: '6px', 
+              padding: '5px 14px', 
+              fontSize: '12px', 
+              fontWeight: '700', 
+              cursor: 'pointer', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px', 
+              boxShadow: '0 2px 6px rgba(37,99,235,0.4)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <svg viewBox="0 0 24 24" style={{ width: '13px', height: '13px', fill: 'currentColor' }}><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            Search
           </button>
         </div>
 
@@ -74,21 +91,40 @@ export default function Navbar({ nodesData, onSelectNode, isApiConnected, onOpen
 
       <div className="header-status" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         {userRole === 'admin' && (
-          <span style={{ background: 'rgba(220, 38, 38, 0.2)', color: '#fca5a5', border: '1px solid #ef444490', padding: '5px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 800, letterSpacing: '0.5px', boxShadow: '0 0 10px rgba(220,38,38,0.2)' }}>
-            🛡️ Senior Command Admin
+          <span style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(220, 38, 38, 0.2)', color: '#fca5a5', border: '1px solid #ef444490', padding: '5px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 800, letterSpacing: '0.5px', boxShadow: '0 0 10px rgba(220,38,38,0.2)' }}>
+            <svg viewBox="0 0 24 24" style={{ width: '13px', height: '13px', fill: 'currentColor' }}><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-5.45 9-12V5l-9-4z"/></svg>
+            Senior Command Admin
           </span>
         )}
 
-        <button onClick={onGoHome} style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', transition: 'all 0.2s' }}>
-          <span>🏠</span> Home
+        <button 
+          onClick={onGoHome} 
+          style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s ease' }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = '#334155'; e.currentTarget.style.color = '#ffffff'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = '#1e293b'; e.currentTarget.style.color = '#38bdf8'; }}
+        >
+          <svg viewBox="0 0 24 24" style={{ width: '14px', height: '14px', fill: 'currentColor' }}><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          Home
         </button>
 
-        <button onClick={onOpenUpload} style={{ background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#ffffff', border: 'none', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', boxShadow: '0 4px 12px rgba(37,99,235,0.35)' }}>
-          <span>📂</span> Evidence Upload
+        <button 
+          onClick={onOpenUpload} 
+          style={{ background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#ffffff', border: 'none', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(37,99,235,0.35)', transition: 'all 0.2s ease' }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(37,99,235,0.5)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(37,99,235,0.35)'; }}
+        >
+          <svg viewBox="0 0 24 24" style={{ width: '14px', height: '14px', fill: 'currentColor' }}><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+          Evidence Upload
         </button>
 
-        <button onClick={onOpenAudit} style={{ background: '#1e293b', color: '#f1f5f9', border: '1px solid #475569', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <span>🛡️</span> MHA Audit Log
+        <button 
+          onClick={onOpenAudit} 
+          style={{ background: '#1e293b', color: '#f1f5f9', border: '1px solid #475569', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s ease' }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = '#334155'; e.currentTarget.style.borderColor = '#64748b'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = '#1e293b'; e.currentTarget.style.borderColor = '#475569'; }}
+        >
+          <svg viewBox="0 0 24 24" style={{ width: '14px', height: '14px', fill: 'currentColor' }}><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-5.45 9-12V5l-9-4zm-1 6h2v2h-2V7zm0 4h2v6h-2v-6z"/></svg>
+          MHA Audit Log
         </button>
 
         <div className="status-indicator" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10b98160', padding: '5px 12px', borderRadius: '20px', fontSize: '11px', color: '#34d399', fontWeight: '800' }}>

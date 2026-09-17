@@ -425,33 +425,33 @@ export default function App() {
               />
             </div>
 
-            <div className="entity-legend" style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', marginTop: '12px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary-navy)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                🎨 Node Color Index & Legend
+            <div className="entity-legend" style={{ background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid var(--border-color)', marginTop: '12px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary-navy)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Node Color Representation
               </div>
-              <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', marginBottom: '6px', fontWeight: 600 }}>
-                <span className="dot" style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#dc2626', display: 'inline-block', boxShadow: '0 0 6px rgba(220, 38, 38, 0.4)' }}></span> 
-                <span>🔴 Red: Suspect / Person Entity</span>
+              <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', marginBottom: '8px', fontWeight: 600 }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#dc2626', display: 'inline-block', boxShadow: '0 0 6px rgba(220, 38, 38, 0.5)', flexShrink: 0 }}></span> 
+                <span>Red: Suspect / Person Entity</span>
               </div>
-              <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', marginBottom: '6px', fontWeight: 600 }}>
-                <span className="dot" style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#2563eb', display: 'inline-block', boxShadow: '0 0 6px rgba(37, 99, 235, 0.4)' }}></span> 
-                <span>🔵 Blue: Phone Number / CDR</span>
+              <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', marginBottom: '8px', fontWeight: 600 }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#2563eb', display: 'inline-block', boxShadow: '0 0 6px rgba(37, 99, 235, 0.5)', flexShrink: 0 }}></span> 
+                <span>Blue: Phone Number / CDR</span>
               </div>
-              <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', marginBottom: '6px', fontWeight: 600 }}>
-                <span className="dot" style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#d97706', display: 'inline-block', boxShadow: '0 0 6px rgba(217, 119, 6, 0.4)' }}></span> 
-                <span>🟠 Orange: Vehicle Node</span>
+              <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', marginBottom: '8px', fontWeight: 600 }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#d97706', display: 'inline-block', boxShadow: '0 0 6px rgba(217, 119, 6, 0.5)', flexShrink: 0 }}></span> 
+                <span>Orange: Vehicle Node</span>
               </div>
-              <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', marginBottom: '6px', fontWeight: 600 }}>
-                <span className="dot" style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#16a34a', display: 'inline-block', boxShadow: '0 0 6px rgba(22, 163, 74, 0.4)' }}></span> 
-                <span>🟢 Green: Location / Safehouse</span>
+              <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', marginBottom: '8px', fontWeight: 600 }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#16a34a', display: 'inline-block', boxShadow: '0 0 6px rgba(22, 163, 74, 0.5)', flexShrink: 0 }}></span> 
+                <span>Green: Location / Safehouse</span>
               </div>
-              <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', marginBottom: '6px', fontWeight: 600 }}>
-                <span className="dot" style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#9333ea', display: 'inline-block', boxShadow: '0 0 6px rgba(147, 51, 234, 0.4)' }}></span> 
-                <span>🟣 Purple: Syndicate / Front Org</span>
+              <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', marginBottom: '8px', fontWeight: 600 }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#9333ea', display: 'inline-block', boxShadow: '0 0 6px rgba(147, 51, 234, 0.5)', flexShrink: 0 }}></span> 
+                <span>Purple: Syndicate / Front Org</span>
               </div>
-              <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 600 }}>
-                <span className="dot" style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#991b1b', display: 'inline-block', boxShadow: '0 0 6px rgba(153, 27, 27, 0.4)' }}></span> 
-                <span>🔴 Crimson: OSINT News Event</span>
+              <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', fontWeight: 600 }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#991b1b', display: 'inline-block', boxShadow: '0 0 6px rgba(153, 27, 27, 0.5)', flexShrink: 0 }}></span> 
+                <span>Crimson: OSINT News Event</span>
               </div>
             </div>
           </div>

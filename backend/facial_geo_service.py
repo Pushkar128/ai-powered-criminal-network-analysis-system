@@ -7,27 +7,8 @@ from backend.analytics_service import record_audit_action
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "suspects")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# In-memory store for suspect face signatures and live GPS sightings
-SUSPECT_FACES = [
-    {
-        "id": "PER_1001",
-        "name": "Rashid Khan @Bhai",
-        "alias": "Shadow King",
-        "threat_score": 92,
-        "status": "WANTED - HIGH PRIORITY TARGET",
-        "photo_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-        "registered_at": "2026-09-17 10:00:00"
-    },
-    {
-        "id": "PER_1002",
-        "name": "Vikram Singh",
-        "alias": "Vicky Operator",
-        "threat_score": 85,
-        "status": "WANTED",
-        "photo_url": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150",
-        "registered_at": "2026-09-17 10:05:00"
-    }
-]
+# In-memory store for suspect face signatures and live GPS sightings (starts empty, populated strictly via user uploads)
+SUSPECT_FACES = []
 
 # Persistent historical sightings log archive (starts empty until live camera scans occur)
 LIVE_SIGHTINGS = []
