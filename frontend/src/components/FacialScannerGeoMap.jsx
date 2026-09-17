@@ -642,73 +642,95 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
                 className="btn btn-danger"
                 onClick={handleClearAllPhotos}
                 style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', padding: '6px 12px' }}
-                title="Wipe all registered target photos from disk"
+                title="Wipe all registered target photos from backend disk & DB"
               >
-                <span>🧹</span> Clear All Targets
+                <span>🧹</span> Wipe All Targets from DB
               </button>
             )}
           </div>
         </div>
 
-        {/* REGISTERED SUSPECT TARGET CARDS LIST */}
-        {registeredSuspects.length > 0 && (
-          <div style={{ display: 'flex', gap: '14px', overflowX: 'auto', paddingTop: '10px', borderTop: '1px dashed var(--border-color)' }}>
-            {registeredSuspects.map((s) => {
-              const isSelected = selectedTargetId === s.id;
-              const photoSrc = s.preview || (s.photo_url ? (s.photo_url.startsWith('http') ? s.photo_url : `${API_BASE_URL}${s.photo_url}`) : '');
-              return (
-                <div
-                  key={s.id}
-                  onClick={() => setSelectedTargetId(s.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    background: isSelected ? '#eff6ff' : '#f8fafc',
-                    padding: '8px 14px',
-                    borderRadius: '8px',
-                    border: isSelected ? '2px solid var(--primary-blue)' : '1px solid var(--border-color)',
-                    cursor: 'pointer',
-                    minWidth: '220px',
-                    boxShadow: isSelected ? '0 4px 12px rgba(37, 99, 235, 0.15)' : 'none',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  {photoSrc ? (
-                    <img
-                      src={photoSrc}
-                      alt={s.name}
-                      onError={(e) => { e.target.style.display = 'none'; }}
-                      style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${isSelected ? 'var(--primary-blue)' : '#cbd5e1'}` }}
-                    />
-                  ) : (
-                    <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: '#3b82f6', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                      {s.name ? s.name.charAt(0).toUpperCase() : 'S'}
-                    </div>
-                  )}
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '13px', fontWeight: 'bold', color: isSelected ? 'var(--primary-blue)' : 'var(--text-main)' }}>
-                      {s.name} {isSelected && <span style={{ fontSize: '10px', background: 'var(--primary-blue)', color: '#fff', padding: '1px 5px', borderRadius: '4px', marginLeft: '4px' }}>Active Target</span>}
-                    </div>
-                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>ID: {s.id.slice(-8)} &bull; Disk File</div>
-                    <div style={{ fontSize: '10px', color: 'var(--accent-green)', fontWeight: 600 }}>✔ Registered Target</div>
-                  </div>
-                  <button
-                    className="btn-icon"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeletePhoto(s.id);
-                    }}
-                    style={{ color: '#ef4444', fontSize: '14px', padding: '4px' }}
-                    title="Delete suspect photo file & database record"
-                  >
-                    🗑️
-                  </button>
-                </div>
-              );
-            })}
+        {/* REGISTERED TARGET SUSPECTS SHOWCASE LIST */}
+        <div style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px dashed var(--border-color)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <h4 style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: 'var(--primary-navy)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              🎯 Registered Target Suspects We Are Looking For ({registeredSuspects.length})
+            </h4>
+            {registeredSuspects.length > 0 ? (
+              <span style={{ fontSize: '11px', color: '#16a34a', fontWeight: 700 }}>
+                ✔ Active Target Facial Surveillance Engaged
+              </span>
+            ) : (
+              <span style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic' }}>
+                No active target photo registered
+              </span>
+            )}
           </div>
-        )}
+
+          {registeredSuspects.length > 0 ? (
+            <div style={{ display: 'flex', gap: '14px', overflowX: 'auto', paddingBottom: '6px' }}>
+              {registeredSuspects.map((s) => {
+                const isSelected = selectedTargetId === s.id;
+                const photoSrc = s.preview || (s.photo_url ? (s.photo_url.startsWith('http') ? s.photo_url : `${API_BASE_URL}${s.photo_url}`) : '');
+                return (
+                  <div
+                    key={s.id}
+                    onClick={() => setSelectedTargetId(s.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      background: isSelected ? '#eff6ff' : '#ffffff',
+                      padding: '10px 14px',
+                      borderRadius: '10px',
+                      border: isSelected ? '2px solid var(--primary-blue)' : '1px solid #cbd5e1',
+                      cursor: 'pointer',
+                      minWidth: '240px',
+                      boxShadow: isSelected ? '0 4px 14px rgba(37, 99, 235, 0.2)' : '0 2px 6px rgba(0,0,0,0.04)',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    {photoSrc ? (
+                      <img
+                        src={photoSrc}
+                        alt={s.name}
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                        style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${isSelected ? 'var(--primary-blue)' : '#ef4444'}` }}
+                      />
+                    ) : (
+                      <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#dc2626', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '18px' }}>
+                        {s.name ? s.name.charAt(0).toUpperCase() : 'S'}
+                      </div>
+                    )}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '13px', fontWeight: '800', color: isSelected ? 'var(--primary-blue)' : '#0f172a' }}>
+                        {s.name} {isSelected && <span style={{ fontSize: '10px', background: 'var(--primary-blue)', color: '#fff', padding: '1px 6px', borderRadius: '4px', marginLeft: '4px' }}>Selected Target</span>}
+                      </div>
+                      <div style={{ fontSize: '10px', color: '#64748b' }}>ID: {s.id.slice(-8)} &bull; WANTED</div>
+                      <div style={{ fontSize: '10px', color: '#dc2626', fontWeight: 700 }}>🚨 Target Suspect Image</div>
+                    </div>
+                    <button
+                      className="btn-icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeletePhoto(s.id);
+                      }}
+                      style={{ color: '#ef4444', fontSize: '14px', padding: '6px', background: '#fee2e2', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
+                      title="Delete suspect photo & wipe DB entry"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={{ padding: '12px 16px', background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: '8px', fontSize: '12px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>ℹ️</span>
+              <span><b>No target suspects registered in DB.</b> Enter a suspect name above & click <b>"Upload & Register Photo"</b> to add a suspect target we are looking for.</span>
+            </div>
+          )}
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
@@ -791,11 +813,40 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
 
           {/* Scanner Controls & Match Banner */}
           <div style={{ marginTop: '16px' }}>
+            {/* Subject Classification Selector */}
+            <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-main)' }}>
+                Scanning Subject at Camera:
+              </span>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 600, color: subjectCategory === 'civilian' ? '#16a34a' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input
+                    type="radio"
+                    name="subjectCategory"
+                    value="civilian"
+                    checked={subjectCategory === 'civilian'}
+                    onChange={() => setSubjectCategory('civilian')}
+                  />
+                  🟢 Officer / Civilian (Self Scan)
+                </label>
+                <label style={{ fontSize: '11px', fontWeight: 600, color: subjectCategory === 'suspect' ? '#dc2626' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input
+                    type="radio"
+                    name="subjectCategory"
+                    value="suspect"
+                    checked={subjectCategory === 'suspect'}
+                    onChange={() => setSubjectCategory('suspect')}
+                  />
+                  🚨 Target Suspect
+                </label>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               <button
                 className="btn btn-primary"
                 onClick={() => {
-                  if (registeredSuspects.length > 0) {
+                  if (subjectCategory === 'suspect' && registeredSuspects.length > 0) {
                     runFacialScan();
                   } else {
                     runNonSuspectScan();
@@ -807,12 +858,12 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
                   padding: '12px 18px',
                   fontSize: '14px',
                   fontWeight: 800,
-                  background: registeredSuspects.length > 0
+                  background: subjectCategory === 'suspect' && registeredSuspects.length > 0
                     ? 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)'
-                    : 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                  boxShadow: registeredSuspects.length > 0
+                    : 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
+                  boxShadow: subjectCategory === 'suspect' && registeredSuspects.length > 0
                     ? '0 4px 14px rgba(220, 38, 38, 0.4)'
-                    : '0 4px 14px rgba(37, 99, 235, 0.3)',
+                    : '0 4px 14px rgba(22, 163, 74, 0.3)',
                   border: 'none',
                   color: '#ffffff',
                   borderRadius: '8px',
