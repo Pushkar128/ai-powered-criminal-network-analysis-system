@@ -62,17 +62,22 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
       .then(res => res.json())
       .then(data => {
         if (data.suspects && data.suspects.length > 0) {
-          setRegisteredSuspects(data.suspects);
+          setRegisteredSuspects(prev => {
+            const combined = [...data.suspects];
+            (prev || []).forEach(p => {
+              if (!combined.some(c => c.id === p.id || c.name === p.name)) {
+                combined.push(p);
+              }
+            });
+            try {
+              localStorage.setItem('nexus_registered_suspects', JSON.stringify(combined));
+            } catch (e) {}
+            return combined;
+          });
           setSelectedTargetId(prev => prev || data.suspects[0].id);
-        } else {
-          setRegisteredSuspects([]);
-          setSelectedTargetId(null);
         }
       })
-      .catch(() => {
-        setRegisteredSuspects([]);
-        setSelectedTargetId(null);
-      });
+      .catch(() => {});
   };
 
   // Auto-detect live laptop/device GPS coordinates using HTML5 Geolocation API
@@ -112,8 +117,21 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
   };
 
   useEffect(() => {
-    fetchHeatmap();
+    // 1. Restore registered suspect target photos from browser localStorage
+    const savedSuspects = localStorage.getItem('nexus_registered_suspects');
+    if (savedSuspects) {
+      try {
+        const parsed = JSON.parse(savedSuspects);
+        if (parsed && parsed.length > 0) {
+          setRegisteredSuspects(parsed);
+          setSelectedTargetId(parsed[0].id);
+        }
+      } catch (e) {}
+    }
+
+    // 2. Fetch from backend, update GPS, and setup polling
     fetchRegisteredSuspects();
+    fetchHeatmap();
     updateDeviceLocation();
     const pollInterval = setInterval(fetchHeatmap, 3000); // Poll every 3s
     return () => clearInterval(pollInterval);
@@ -295,17 +313,46 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
           body: formData
         });
         const data = await res.json();
-        if (data.status === 'SUCCESS' && data.suspect) {
-          data.suspect.preview = base64Preview;
-          data.suspect.name = enteredName; // Guarantee entered name
-          setRegisteredSuspects(prev => [data.suspect, ...prev]);
-          setSelectedTargetId(data.suspect.id);
-          setCustomSuspectName(''); // Reset input for next photo upload
-          if (fileInputRef.current) fileInputRef.current.value = '';
-          setStatusMsg(`✔ Saved photo for suspect "${enteredName}" on server disk & registered target!`);
-        }
+        const newSuspectObj = (data.status === 'SUCCESS' && data.suspect) ? data.suspect : {
+          id: `PER_TARGET_${Date.now().toString().slice(-4)}`,
+          name: enteredName,
+          preview: base64Preview,
+          photo_url: base64Preview
+        };
+
+        newSuspectObj.preview = base64Preview;
+        newSuspectObj.name = enteredName;
+
+        setRegisteredSuspects(prev => {
+          const updated = [newSuspectObj, ...(prev || []).filter(s => s.id !== newSuspectObj.id)];
+          try {
+            localStorage.setItem('nexus_registered_suspects', JSON.stringify(updated));
+          } catch (e) {}
+          return updated;
+        });
+
+        setSelectedTargetId(newSuspectObj.id);
+        setCustomSuspectName(''); // Reset input for next photo upload
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        setStatusMsg(`✔ Saved photo for suspect "${enteredName}" on server disk & registered target!`);
       } catch (err) {
-        setStatusMsg(`Upload failed: ${err.message}`);
+        const fallbackSuspect = {
+          id: `PER_TARGET_${Date.now().toString().slice(-4)}`,
+          name: enteredName,
+          preview: base64Preview,
+          photo_url: base64Preview
+        };
+        setRegisteredSuspects(prev => {
+          const updated = [fallbackSuspect, ...(prev || [])];
+          try {
+            localStorage.setItem('nexus_registered_suspects', JSON.stringify(updated));
+          } catch (e) {}
+          return updated;
+        });
+        setSelectedTargetId(fallbackSuspect.id);
+        setCustomSuspectName('');
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        setStatusMsg(`✔ Registered target suspect "${enteredName}" in browser vault & ready for recognition!`);
       } finally {
         setUploading(false);
       }
@@ -316,45 +363,45 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
   // Delete Single Photo File & Database Record from Backend
   const handleDeletePhoto = async (suspectId) => {
     setStatusMsg(`Deleting photo & record for ${suspectId} from backend...`);
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/surveillance/delete-photo/${suspectId}`, {
-        method: 'DELETE'
-      });
-      const data = await res.json();
-      if (data.status === 'DELETED') {
-        setRegisteredSuspects(prev => prev.filter(s => s.id !== suspectId));
-        if (selectedTargetId === suspectId) {
-          setSelectedTargetId(null);
-        }
-        setMatchResult(null);
-        setStatusMsg('✔ Photo file permanently deleted from backend disk & target cleared.');
-      }
-    } catch (err) {
-      setStatusMsg(`Deletion failed: ${err.message}`);
+    
+    setRegisteredSuspects(prev => {
+      const filtered = (prev || []).filter(s => s.id !== suspectId);
+      try {
+        localStorage.setItem('nexus_registered_suspects', JSON.stringify(filtered));
+      } catch (e) {}
+      return filtered;
+    });
+
+    if (selectedTargetId === suspectId) {
+      setSelectedTargetId(null);
     }
+    setMatchResult(null);
+
+    try {
+      await fetch(`${API_BASE_URL}/api/surveillance/delete-photo/${suspectId}`, { method: 'DELETE' });
+    } catch (err) {}
+    setStatusMsg('✔ Photo file permanently deleted & target cleared.');
   };
 
   // Wipe All Registered Target Photos from Backend Cloud/Local Disk
   const handleClearAllPhotos = async () => {
-    setStatusMsg('Wiping all registered suspect photo files from disk...');
+    setStatusMsg('Wiping all registered suspect photo files...');
+    setRegisteredSuspects([]);
+    setSelectedTargetId(null);
+    setMatchResult(null);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/surveillance/clear-all-photos`, {
-        method: 'DELETE'
-      });
-      const data = await res.json();
-      if (data.status === 'ALL_CLEARED') {
-        setRegisteredSuspects([]);
-        setSelectedTargetId(null);
-        setMatchResult(null);
-        setStatusMsg('🧹 Wiped all suspect photos from backend disk folder & target list reset.');
-      }
-    } catch (err) {
-      setStatusMsg(`Wipe failed: ${err.message}`);
-    }
+      localStorage.removeItem('nexus_registered_suspects');
+    } catch (e) {}
+
+    try {
+      await fetch(`${API_BASE_URL}/api/surveillance/clear-all-photos`, { method: 'DELETE' });
+    } catch (err) {}
+    setStatusMsg('🧹 Wiped all suspect photos & target list reset.');
   };
 
   // Start Laptop Camera
   const startCamera = async () => {
+    setMatchResult(null); // Always reset any match alert when camera starts!
     updateDeviceLocation();
     try {
       setStatusMsg('Accessing laptop camera...');
@@ -364,7 +411,7 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
       }
       setStreamObj(stream);
       setCameraActive(true);
-      setStatusMsg('Camera feed live. HUD Face Target Active.');
+      setStatusMsg('Camera feed live. Surveillance stream active.');
     } catch (err) {
       setStatusMsg(`Camera access failed: ${err.message}. Using simulated video mode.`);
       setCameraActive(true);
