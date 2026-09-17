@@ -499,14 +499,8 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
       setStatusMsg('Extracting facial vectors... No suspect registered in database.');
       setTimeout(() => {
         setIsScanning(false);
-        setMatchResult({
-          isMatch: false,
-          name: 'Civilian / Officer',
-          status: 'NO REGISTERED TARGET - CLEARANCE GRANTED',
-          distance: '0.82',
-          time: new Date().toLocaleTimeString()
-        });
-        setStatusMsg('🟢 Surveillance Active: Scanned face does NOT match any registered suspect photo. Clearance Granted.');
+        setMatchResult(null);
+        setStatusMsg('🟢 Surveillance Active: Scanned face does NOT match any registered suspect photo. Zero alert generated.');
       }, 1000);
       return;
     }
@@ -1072,25 +1066,7 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
               )}
             </div>
 
-            {/* GREEN CLEARANCE BANNER (DISPLAYED WHEN SCANNED FACE DOES NOT MATCH REGISTERED SUSPECT) */}
-            {matchResult && !matchResult.isMatch && (
-              <div style={{ marginTop: '14px', background: '#f0fdf4', border: '1.5px solid #22c55e', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ color: '#15803d', fontWeight: 'bold', fontSize: '13px' }}>
-                    🟢 CLEARANCE GRANTED: NON-SUSPECT DETECTED
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#166534', marginTop: '2px' }}>
-                    Scanned face (Civilian / Officer) does not match registered suspect photo. Cosine Distance: <b>{matchResult.distance}</b> (Threshold: &lt;0.40). Zero alert triggered.
-                  </div>
-                </div>
-                <button
-                  onClick={() => setMatchResult(null)}
-                  style={{ background: '#dcfce7', color: '#15803d', border: 'none', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}
-                >
-                  ✕ Clear
-                </button>
-              </div>
-            )}
+
 
             {/* RED SUSPECT ALERT BANNER (DISPLAYED ONLY WHEN SUSPECT MATCH IS CONFIRMED) */}
             {matchResult && matchResult.isMatch && (
