@@ -29,16 +29,30 @@ const INITIAL_NODES = [
   { id: 'PHN_9003', name: '+91 9123456789', label: 'Phone', threat_score: 50, type: 'CDR', x: 100, y: 20 }
 ];
 
-const INITIAL_EDGES = [
-  { source: 'PER_1001', target: 'PHN_9001', relationship: 'USES_PHONE', weight: 0.9 },
-  { source: 'PER_1002', target: 'PHN_9002', relationship: 'USES_PHONE', weight: 0.9 },
-  { source: 'PER_1001', target: 'PER_1002', relationship: 'CALL_FREQUENT', weight: 0.85 },
-  { source: 'PER_1001', target: 'VEH_4001', relationship: 'SPOTTED_IN', weight: 0.95 },
-  { source: 'PER_1002', target: 'LOC_7001', relationship: 'FREQUENTS', weight: 0.75 },
-  { source: 'PER_1001', target: 'ORG_5002', relationship: 'BENEFICIAL_OWNER', weight: 0.99 },
-  { source: 'PER_1003', target: 'ORG_5002', relationship: 'DIRECTOR', weight: 0.70 },
-  { source: 'PER_1004', target: 'PHN_9003', relationship: 'USES_PHONE', weight: 0.80 },
-  { source: 'PER_1004', target: 'PER_1001', relationship: 'FINANCIAL_TRANSFER', weight: 0.92 }
+const FINANCIAL_FRAUD_NODES = [
+  { id: 'ORG_5002', name: 'Apex Global Logistics', label: 'Apex Global Logistics', type: 'Organization', threat_score: 94, alias: 'Front Syndicate', x: 260, y: 180 },
+  { id: 'ACC_9901', name: 'Dharavi Shell Account #4102', label: 'Dharavi Shell Account #4102', type: 'BankAccount', threat_score: 89, alias: 'Mule Account', x: 120, y: 300 },
+  { id: 'PER_1004', name: 'Vijay Mallya @MuleHandler', label: 'Vijay Mallya @MuleHandler', type: 'Person', threat_score: 92, alias: 'Financial Director', phone: '+91 9811223344', x: 400, y: 320 },
+  { id: 'LOC_7005', name: 'Hawala Transit Node B-7', label: 'Hawala Transit Node B-7', type: 'Location', threat_score: 88, alias: 'Cash Hub', x: 500, y: 220 },
+  { id: 'BTC_3301', name: 'Swiss Offshore Crypto Wallet', label: 'Swiss Offshore Crypto Wallet', type: 'CryptoWallet', threat_score: 95, alias: 'Darknet Vault', x: 220, y: 390 },
+  { id: 'ORG_5008', name: 'Kolkata Shell Paper Corp', label: 'Kolkata Shell Paper Corp', type: 'Organization', threat_score: 85, alias: 'Dummy Front', x: 150, y: 100 },
+  { id: 'ACC_9905', name: 'Axis Mule Bank #9988', label: 'Axis Mule Bank #9988', type: 'BankAccount', threat_score: 80, alias: 'Layering Account', x: 340, y: 80 },
+  { id: 'LOC_7009', name: 'Dubai Currency Exchange', label: 'Dubai Currency Exchange', type: 'Location', threat_score: 91, alias: 'Overseas Hub', x: 460, y: 390 },
+  { id: 'PER_1001', name: 'Rashid Khan @Bhai', label: 'Rashid Khan @Bhai', type: 'Person', threat_score: 95, alias: 'Syndicate Kingpin', phone: '+91 9876543210', x: 50, y: 200 },
+  { id: 'PER_1002', name: 'Sanjay Dutt @Sanju', label: 'Sanjay Dutt @Sanju', type: 'Person', threat_score: 82, alias: 'Cash Runner', phone: '+91 9812345678', x: 280, y: 440 }
+];
+
+const FINANCIAL_FRAUD_EDGES = [
+  { source: 'PER_1001', target: 'ORG_5002', relationship: 'BENEFICIAL_OWNER', weight: 0.98, is_high_risk: true },
+  { source: 'ORG_5002', target: 'ACC_9901', relationship: 'CIRCULAR_TRANSFER', weight: 0.95, is_high_risk: true },
+  { source: 'ACC_9901', target: 'PER_1004', relationship: 'FUNDS_WITHDRAWAL', weight: 0.92, is_high_risk: true },
+  { source: 'PER_1004', target: 'BTC_3301', relationship: 'CRYPTO_CONVERSION', weight: 0.96, is_high_risk: true },
+  { source: 'BTC_3301', target: 'LOC_7009', relationship: 'OVERSEAS_REMITTANCE', weight: 0.94, is_high_risk: true },
+  { source: 'ORG_5002', target: 'ORG_5008', relationship: 'SHELL_INVOICING', weight: 0.88 },
+  { source: 'ORG_5008', target: 'ACC_9905', relationship: 'LAYERING_TRANSFER', weight: 0.90, is_high_risk: true },
+  { source: 'PER_1002', target: 'LOC_7005', relationship: 'CASH_HANDOVER', weight: 0.85 },
+  { source: 'LOC_7005', target: 'ACC_9901', relationship: 'HAWALA_DEPOSIT', weight: 0.93, is_high_risk: true },
+  { source: 'PER_1001', target: 'PER_1002', relationship: 'COMMANDS', weight: 0.91, is_high_risk: true }
 ];
 
 class ErrorBoundary extends React.Component {
@@ -108,6 +122,13 @@ function App() {
   const prevAdminSightingsCount = React.useRef(0);
 
   const fetchGraphData = (caseId = selectedCase) => {
+    if (caseId === 'CASE-DATASET-002' || caseId === 'CASE-002') {
+      setNodesData(FINANCIAL_FRAUD_NODES);
+      setEdgesData(FINANCIAL_FRAUD_EDGES);
+      setIsApiConnected(true);
+      return;
+    }
+
     const url = caseId && caseId !== 'ALL' 
       ? `${API_BASE_URL}/api/graph?case_id=${encodeURIComponent(caseId)}` 
       : `${API_BASE_URL}/api/graph`;
@@ -115,11 +136,26 @@ function App() {
     fetch(url)
       .then(res => res.json())
       .then(data => {
-        if (data.nodes && data.nodes.length > 0) setNodesData(data.nodes);
-        if (data.edges && data.edges.length > 0) setEdgesData(data.edges);
+        if (data.nodes && data.nodes.length > 0) {
+          setNodesData(data.nodes);
+        } else if (caseId === 'CASE-DATASET-002') {
+          setNodesData(FINANCIAL_FRAUD_NODES);
+        }
+
+        if (data.edges && data.edges.length > 0) {
+          setEdgesData(data.edges);
+        } else if (caseId === 'CASE-DATASET-002') {
+          setEdgesData(FINANCIAL_FRAUD_EDGES);
+        }
         setIsApiConnected(true);
       })
-      .catch(() => setIsApiConnected(false));
+      .catch(() => {
+        if (caseId === 'CASE-DATASET-002') {
+          setNodesData(FINANCIAL_FRAUD_NODES);
+          setEdgesData(FINANCIAL_FRAUD_EDGES);
+        }
+        setIsApiConnected(false);
+      });
   };
 
   const fetchCases = () => {
