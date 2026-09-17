@@ -412,23 +412,34 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
     }, 1000);
   };
 
-  // Trigger Single Facial Scan Recognition against registered suspect folder photos
+  // Live camera scan: scans laptop camera stream for non-suspect / officer view
   const runFacialScan = async () => {
     setIsScanning(true);
-    setStatusMsg('Extracting 128-d facial landmark vectors & computing Cosine Distance against target database...');
+    setStatusMsg('Extracting facial vectors & computing Cosine Distance against target database...');
     
+    setTimeout(() => {
+      setIsScanning(false);
+      setMatchResult(null); // Nothing happens when non-suspect / officer is in front of camera!
+      setStatusMsg('Camera surveillance active. No suspect match detected for face in camera view.');
+    }, 1200);
+  };
+
+  // Explicit target suspect match: triggered when clicking 'Test Match' on registered suspect card
+  const triggerTargetMatch = async (targetSuspect) => {
+    const activeTarget = targetSuspect || (registeredSuspects && registeredSuspects.length > 0
+      ? (registeredSuspects.find(s => s.id === selectedTargetId) || registeredSuspects[0])
+      : null);
+
+    if (!activeTarget) {
+      setStatusMsg('No registered suspect photo uploaded to match against.');
+      return;
+    }
+
+    setIsScanning(true);
+    setStatusMsg(`Extracting 128-d landmark vectors & verifying match for "${activeTarget.name}"...`);
+
     setTimeout(async () => {
       setIsScanning(false);
-      
-      const activeTarget = (registeredSuspects && registeredSuspects.length > 0)
-        ? (registeredSuspects.find(s => s.id === selectedTargetId) || registeredSuspects[0])
-        : null;
-
-      if (!activeTarget) {
-        setMatchResult(null);
-        setStatusMsg('Live camera scanning... No registered suspect match detected.');
-        return;
-      }
 
       const targetName = activeTarget.name || 'Registered Target Suspect';
       const targetId = activeTarget.id || 'PER_FACE_TARGET';
@@ -450,7 +461,7 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
         location_name: locName
       };
       setMatchResult(match);
-      setStatusMsg(`✔ FACIAL MATCH CONFIRMED: ${match.name} (95.8% Confidence)`);
+      setStatusMsg(`🚨 TARGET SUSPECT MATCH CONFIRMED: ${match.name} (95.8% Match Confidence)`);
 
       const newSighting = {
         id: `SIGHT_LIVE_${Date.now().toString().slice(-4)}`,
@@ -463,10 +474,8 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
         timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19)
       };
 
-      // Add to active session sightings so red popup pin renders on live map
       setActiveSessionSightings(prev => [newSighting, ...(prev || [])]);
 
-      // Log sighting to backend API for persistent history archive
       try {
         await fetch(`${API_BASE_URL}/api/surveillance/sighting`, {
           method: 'POST',
@@ -480,7 +489,6 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
             confidence: 0.958
           })
         });
-
         fetchHeatmap();
       } catch (e) {}
     }, 1200);
@@ -795,7 +803,7 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedTargetId(s.id);
-                          runFacialScan();
+                          triggerTargetMatch(s);
                         }}
                         style={{ fontSize: '10px', padding: '4px 8px', background: 'linear-gradient(135deg, #dc2626, #991b1b)', border: 'none', borderRadius: '5px', color: '#fff', fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 6px rgba(220,38,38,0.3)' }}
                         title={`Simulate scanning & matching target "${s.name}"`}

@@ -199,48 +199,6 @@ export default function EvidenceUploadModal({ isOpen, onClose, onRefreshGraph, o
 
         {/* MODAL BODY */}
         <div style={{ padding: '24px' }}>
-          
-          {/* TAB BUTTONS */}
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
-            <button
-              onClick={() => setActiveTab('pdf')}
-              style={{
-                padding: '8px 14px',
-                borderRadius: '6px',
-                fontSize: '12px',
-                fontWeight: 800,
-                border: 'none',
-                cursor: 'pointer',
-                background: activeTab === 'pdf' ? '#b91c1c' : '#f1f5f9',
-                color: activeTab === 'pdf' ? '#ffffff' : '#475569',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                transition: 'all 0.2s'
-              }}
-            >
-              <span>📄 / 🖼️</span> Upload FIR File (PDF / PNG / JPG)
-            </button>
-            <button
-              onClick={() => setActiveTab('text')}
-              style={{
-                padding: '8px 14px',
-                borderRadius: '6px',
-                fontSize: '12px',
-                fontWeight: 800,
-                border: 'none',
-                cursor: 'pointer',
-                background: activeTab === 'text' ? '#b91c1c' : '#f1f5f9',
-                color: activeTab === 'text' ? '#ffffff' : '#475569',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                transition: 'all 0.2s'
-              }}
-            >
-              <span>📝</span> Raw Text FIR Statement
-            </button>
-          </div>
 
           {/* CASE NUMBER INPUT FIELD */}
           <div style={{ marginBottom: '18px' }}>
@@ -269,139 +227,92 @@ export default function EvidenceUploadModal({ isOpen, onClose, onRefreshGraph, o
             </span>
           </div>
 
-          {/* PDF / IMAGE FILE UPLOAD TAB */}
-          {activeTab === 'pdf' && (
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
-                UPLOAD POLICE FIR / CHARGE SHEET FILE (PDF OR PNG / JPG IMAGE):
-              </label>
+          {/* POLICE FIR / CHARGE SHEET FILE UPLOAD (PDF OR PNG / JPG IMAGE) */}
+          <div>
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+              UPLOAD POLICE FIR / CHARGE SHEET FILE (PDF OR PNG / JPG IMAGE):
+            </label>
 
-              <input
-                type="file"
-                accept=".pdf, .png, .jpg, .jpeg, .webp, .bmp, image/*, application/pdf"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                style={{ display: 'none' }}
-              />
+            <input
+              type="file"
+              accept=".pdf, .png, .jpg, .jpeg, .webp, .bmp, image/*, application/pdf"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+            />
 
-              <div
-                onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                style={{
-                  border: '2px dashed #cbd5e1',
-                  borderRadius: '10px',
-                  padding: '24px 20px',
-                  textAlign: 'center',
-                  background: selectedFile ? '#f0fdf4' : '#f8fafc',
-                  borderColor: selectedFile ? '#22c55e' : '#cbd5e1',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  marginBottom: '16px'
-                }}
-              >
-                {selectedFile ? (
-                  <div>
-                    {imagePreviewUrl ? (
-                      <img
-                        src={imagePreviewUrl}
-                        alt="FIR Preview"
-                        style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px', border: '2px solid #22c55e', marginBottom: '8px' }}
-                      />
-                    ) : (
-                      <div style={{ fontSize: '36px', marginBottom: '8px' }}>📄</div>
-                    )}
-                    <div style={{ fontWeight: 800, fontSize: '13px', color: '#15803d' }}>
-                      {selectedFile.name}
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#166534', marginTop: '2px' }}>
-                      Size: {(selectedFile.size / 1024).toFixed(1)} KB &bull; {selectedFile.type.startsWith('image/') ? 'Image Evidence Document' : 'PDF Document'} Loaded
-                    </div>
-                    <span style={{ fontSize: '10px', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '4px', marginTop: '8px', display: 'inline-block', fontWeight: 800 }}>
-                      ✓ Click to Change File
-                    </span>
+            <div
+              onClick={() => fileInputRef.current && fileInputRef.current.click()}
+              style={{
+                border: '2px dashed #cbd5e1',
+                borderRadius: '10px',
+                padding: '24px 20px',
+                textAlign: 'center',
+                background: selectedFile ? '#f0fdf4' : '#f8fafc',
+                borderColor: selectedFile ? '#22c55e' : '#cbd5e1',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                marginBottom: '16px'
+              }}
+            >
+              {selectedFile ? (
+                <div>
+                  {imagePreviewUrl ? (
+                    <img
+                      src={imagePreviewUrl}
+                      alt="FIR Preview"
+                      style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px', border: '2px solid #22c55e', marginBottom: '8px' }}
+                    />
+                  ) : (
+                    <div style={{ fontSize: '36px', marginBottom: '8px' }}>📄</div>
+                  )}
+                  <div style={{ fontWeight: 800, fontSize: '13px', color: '#15803d' }}>
+                    {selectedFile.name}
                   </div>
-                ) : (
-                  <div>
-                    <div style={{ fontSize: '36px', marginBottom: '8px', color: '#b91c1c' }}>📥</div>
-                    <div style={{ fontWeight: 800, fontSize: '13.5px', color: '#0f172a' }}>
-                      Click to Browse & Upload FIR Document (PDF or PNG / JPG Image)
-                    </div>
-                    <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '4px' }}>
-                      Supports official FIR documents, charge sheets & image scans (.pdf, .png, .jpg, .jpeg)
-                    </div>
+                  <div style={{ fontSize: '11px', color: '#166534', marginTop: '2px' }}>
+                    Size: {(selectedFile.size / 1024).toFixed(1)} KB &bull; {selectedFile.type.startsWith('image/') ? 'Image Evidence Document' : 'PDF Document'} Loaded
                   </div>
-                )}
-              </div>
-
-              <button
-                onClick={processFileAndBuildNetwork}
-                disabled={loading || !selectedFile}
-                style={{
-                  width: '100%',
-                  background: selectedFile ? '#b91c1c' : '#94a3b8',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '12px 20px',
-                  fontSize: '13px',
-                  fontWeight: 800,
-                  letterSpacing: '0.5px',
-                  cursor: selectedFile && !loading ? 'pointer' : 'not-allowed',
-                  boxShadow: selectedFile ? '0 4px 12px rgba(185, 28, 28, 0.3)' : 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px'
-                }}
-              >
-                <span>📄 / 🖼️</span> {loading ? 'Extracting Entities from Document...' : 'Upload & Generate FIR Network Graph'}
-              </button>
+                  <span style={{ fontSize: '10px', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '4px', marginTop: '8px', display: 'inline-block', fontWeight: 800 }}>
+                    ✓ Click to Change File
+                  </span>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ fontSize: '36px', marginBottom: '8px', color: '#b91c1c' }}>📥</div>
+                  <div style={{ fontWeight: 800, fontSize: '13.5px', color: '#0f172a' }}>
+                    Click to Browse & Upload FIR Document (PDF or PNG / JPG Image)
+                  </div>
+                  <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '4px' }}>
+                    Supports official FIR documents, charge sheets & image scans (.pdf, .png, .jpg, .jpeg)
+                  </div>
+                </div>
+              )}
             </div>
-          )}
 
-          {/* RAW TEXT TAB */}
-          {activeTab === 'text' && (
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
-                PASTE RAW FIR TEXT STATEMENT:
-              </label>
-              <textarea
-                rows="5"
-                placeholder="Example: Accused Rashid Khan was spotted near Dharavi with phone +91 9876543210 driving vehicle MH-02-CD-9988..."
-                value={firText}
-                onChange={(e) => setFirText(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '8px',
-                  fontSize: '12.5px',
-                  fontFamily: 'sans-serif',
-                  outline: 'none',
-                  background: '#f8fafc'
-                }}
-              />
-              <button
-                onClick={handleIngestText}
-                disabled={loading || !firText.trim()}
-                style={{
-                  width: '100%',
-                  background: firText.trim() ? '#b91c1c' : '#94a3b8',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '12px 20px',
-                  fontSize: '13px',
-                  fontWeight: 800,
-                  letterSpacing: '0.5px',
-                  cursor: firText.trim() && !loading ? 'pointer' : 'not-allowed',
-                  marginTop: '14px',
-                  boxShadow: firText.trim() ? '0 4px 12px rgba(185, 28, 28, 0.3)' : 'none'
-                }}
-              >
-                {loading ? 'Extracting NLP Entities...' : 'Extract Entities & Build Network Nodes'}
-              </button>
-            </div>
-          )}
+            <button
+              onClick={processFileAndBuildNetwork}
+              disabled={loading || !selectedFile}
+              style={{
+                width: '100%',
+                background: selectedFile ? '#b91c1c' : '#94a3b8',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '12px 20px',
+                fontSize: '13px',
+                fontWeight: 800,
+                letterSpacing: '0.5px',
+                cursor: selectedFile && !loading ? 'pointer' : 'not-allowed',
+                boxShadow: selectedFile ? '0 4px 12px rgba(185, 28, 28, 0.3)' : 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
+            >
+              <span>📄 / 🖼️</span> {loading ? 'Extracting Entities from Document...' : 'Upload & Generate FIR Network Graph'}
+            </button>
+          </div>
 
           {/* STATUS MESSAGE BANNER */}
           {statusMsg && (

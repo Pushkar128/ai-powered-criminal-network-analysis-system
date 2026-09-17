@@ -552,6 +552,90 @@ function App() {
               </button>
             </div>
           </div>
+
+          {/* Render Graph Filters & Legend in Left Sidebar ONLY when Network Topology Visualizer is active */}
+          {activeTab === 'graph-tab' && (
+            <div className="sidebar-section" style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e2e8f0' }}>
+              <h3 style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
+                Graph Filters & Legend
+              </h3>
+              
+              <div className="filter-group" style={{ marginBottom: '12px' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>
+                  Filter Entity Type:
+                </label>
+                <select
+                  value={entityFilter}
+                  onChange={(e) => setEntityFilter(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    borderRadius: '6px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: '#0f172a',
+                    background: '#ffffff',
+                    outline: 'none'
+                  }}
+                >
+                  <option value="ALL">All Entities</option>
+                  <option value="Person">Suspects / Persons</option>
+                  <option value="Phone">Phone Numbers / CDR</option>
+                  <option value="Vehicle">Vehicles</option>
+                  <option value="Location">Locations / Hideouts</option>
+                  <option value="Organization">Front Orgs / Syndicates</option>
+                  <option value="NewsEvent">OSINT News Events</option>
+                </select>
+              </div>
+
+              <div className="filter-group" style={{ marginBottom: '14px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>
+                  <span>Threat Level Threshold:</span>
+                  <span style={{ color: '#b91c1c', fontWeight: 800 }}>{threatFilter}+</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="90"
+                  step="5"
+                  value={threatFilter}
+                  onChange={(e) => setThreatFilter(parseInt(e.target.value))}
+                  style={{ width: '100%', accentColor: '#2563eb', cursor: 'pointer' }}
+                />
+              </div>
+
+              <div className="entity-legend" style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e2e8f0', marginTop: '12px' }}>
+                <div style={{ fontSize: '10.5px', fontWeight: 800, color: '#0f172a', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Node Color Representation
+                </div>
+                <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11.5px', marginBottom: '8px', fontWeight: 600, color: '#334155' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#dc2626', display: 'inline-block', flexShrink: 0 }}></span> 
+                  <span>Red: Suspect / Person Entity</span>
+                </div>
+                <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11.5px', marginBottom: '8px', fontWeight: 600, color: '#334155' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#2563eb', display: 'inline-block', flexShrink: 0 }}></span> 
+                  <span>Blue: Phone Number / CDR</span>
+                </div>
+                <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11.5px', marginBottom: '8px', fontWeight: 600, color: '#334155' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#d97706', display: 'inline-block', flexShrink: 0 }}></span> 
+                  <span>Orange: Vehicle Node</span>
+                </div>
+                <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11.5px', marginBottom: '8px', fontWeight: 600, color: '#334155' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#16a34a', display: 'inline-block', flexShrink: 0 }}></span> 
+                  <span>Green: Location / Safehouse</span>
+                </div>
+                <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11.5px', marginBottom: '8px', fontWeight: 600, color: '#334155' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#9333ea', display: 'inline-block', flexShrink: 0 }}></span> 
+                  <span>Purple: Syndicate / Front Org</span>
+                </div>
+                <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11.5px', fontWeight: 600, color: '#334155' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#991b1b', display: 'inline-block', flexShrink: 0 }}></span> 
+                  <span>Crimson: OSINT News Event</span>
+                </div>
+              </div>
+            </div>
+          )}
         </aside>
 
         <main className="workspace">
