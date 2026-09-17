@@ -2,12 +2,18 @@ import React, { useState } from 'react';
 
 export default function LandingPage({ onEnterPortal, onAdminLogin }) {
   const [showAdminModal, setShowAdminModal] = useState(false);
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('sih2026');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
 
+  const openAdminModal = () => {
+    setUsername('');
+    setPassword('');
+    setLoginError('');
+    setShowAdminModal(true);
+  };
+
   const handlePortalClick = (role = 'public') => {
-    // Open main intelligence portal strictly in a new tab so the current tab remains on the Homepage
     const targetUrl = `${window.location.origin}${window.location.pathname}?mode=portal&role=${role}`;
     window.open(targetUrl, '_blank');
   };
@@ -18,7 +24,7 @@ export default function LandingPage({ onEnterPortal, onAdminLogin }) {
       handlePortalClick('admin');
       setShowAdminModal(false);
     } else {
-      setLoginError('Invalid Admin Credentials. Use admin / sih2026');
+      setLoginError('Invalid Admin Credentials. Please enter username: admin | password: sih2026');
     }
   };
 
@@ -69,7 +75,7 @@ export default function LandingPage({ onEnterPortal, onAdminLogin }) {
             🚀 Free Portal Access ↗
           </button>
           <button
-            onClick={() => setShowAdminModal(true)}
+            onClick={openAdminModal}
             style={{
               background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
               color: '#ffffff',
@@ -218,6 +224,7 @@ export default function LandingPage({ onEnterPortal, onAdminLogin }) {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Enter admin username (e.g. admin)"
                   style={{ width: '100%', padding: '10px 12px', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff', fontSize: '13px', outline: 'none' }}
                 />
               </div>
@@ -230,6 +237,7 @@ export default function LandingPage({ onEnterPortal, onAdminLogin }) {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter password (e.g. sih2026)"
                   style={{ width: '100%', padding: '10px 12px', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff', fontSize: '13px', outline: 'none' }}
                 />
               </div>

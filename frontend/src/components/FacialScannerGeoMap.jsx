@@ -29,6 +29,7 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
   const [subjectCategory, setSubjectCategory] = useState('civilian'); // 'civilian' | 'suspect'
   const [statusMsg, setStatusMsg] = useState('');
   const [logTab, setLogTab] = useState('history'); // 'history' | 'live'
+  const [showAdminPopup, setShowAdminPopup] = useState(true);
 
   const [remoteAlert, setRemoteAlert] = useState(null);
   const previousSightingsCount = useRef(0);
@@ -442,6 +443,106 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
   return (
     <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
       
+      {/* ADMIN INTEL SIGHTING BRIEFING POPUP MODAL */}
+      {showAdminPopup && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(15, 23, 42, 0.82)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 99999,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            maxWidth: '580px',
+            width: '100%',
+            boxShadow: '0 25px 50px -12px rgba(220, 38, 38, 0.35)',
+            border: '2px solid #ef4444',
+            overflow: 'hidden'
+          }}>
+            <div style={{ background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)', color: '#ffffff', padding: '18px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '24px' }}>🚨</span>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, letterSpacing: '0.5px' }}>
+                    ADMIN INTELLIGENCE SIGHTING BRIEFING
+                  </h3>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#fef2f2', fontWeight: 500 }}>
+                    AI Facial Surveillance &bull; Registered Suspect Last Known Locations
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAdminPopup(false)}
+                style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '16px', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ padding: '20px 24px', maxHeight: '380px', overflowY: 'auto' }}>
+              <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '12px', color: '#991b1b', fontWeight: 600 }}>
+                ⚠️ High Priority Alert: Below are active registered suspect targets and their last recorded AI camera sighting locations:
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: '14px', fontWeight: '800', color: '#dc2626' }}>
+                      👤 Rashid Khan @Bhai (PER_1001)
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#0f172a', fontWeight: 700, marginTop: '2px' }}>
+                      📍 Last Seen: <span style={{ color: '#2563eb' }}>Central Surveillance Checkpoint #04</span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                      GPS: (28.6139, 77.2090) &bull; Confidence: <b style={{ color: '#16a34a' }}>95.8% Match</b>
+                    </div>
+                  </div>
+                  <span className="badge badge-high" style={{ fontSize: '11px', padding: '4px 8px' }}>
+                    WANTED TARGET
+                  </span>
+                </div>
+
+                <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: '14px', fontWeight: '800', color: '#dc2626' }}>
+                      👤 Vikram Singh (PER_1002)
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#0f172a', fontWeight: 700, marginTop: '2px' }}>
+                      📍 Last Seen: <span style={{ color: '#2563eb' }}>Secunderabad Syndicate Hideout</span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                      GPS: (28.6289, 77.1890) &bull; Confidence: <b style={{ color: '#16a34a' }}>88.4% Match</b>
+                    </div>
+                  </div>
+                  <span className="badge badge-high" style={{ fontSize: '11px', padding: '4px 8px' }}>
+                    WANTED TARGET
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ background: '#f1f5f9', padding: '14px 24px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic' }}>
+                NCIC / MHA Surveillance Intelligence System
+              </span>
+              <button
+                className="btn btn-primary"
+                onClick={() => setShowAdminPopup(false)}
+                style={{ background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: '6px', fontWeight: 800, fontSize: '12px', cursor: 'pointer' }}
+              >
+                📍 Inspect Sighting Pins on Geo-Map
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* REMOTE SIGHTING ALERT BANNER (Triggers when another device logs a sighting) */}
       {remoteAlert && (
         <div style={{
@@ -601,15 +702,25 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
               </p>
             </div>
             
-            {cameraActive ? (
-              <button className="btn btn-danger" onClick={stopCamera} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span>🛑</span> Turn Off Camera
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowAdminPopup(true)}
+                style={{ padding: '6px 12px', fontSize: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}
+                title="Re-open Admin Intelligence Briefing Modal"
+              >
+                <span>🚨</span> Admin Briefing
               </button>
-            ) : (
-              <button className="btn btn-primary" onClick={startCamera} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span>📹</span> Start Laptop Camera
-              </button>
-            )}
+              {cameraActive ? (
+                <button className="btn btn-danger" onClick={stopCamera} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>🛑</span> Turn Off Camera
+                </button>
+              ) : (
+                <button className="btn btn-primary" onClick={startCamera} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>📹</span> Start Laptop Camera
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Camera Viewport */}
