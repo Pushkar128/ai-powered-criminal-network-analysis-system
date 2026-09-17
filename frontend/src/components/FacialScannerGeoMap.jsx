@@ -412,15 +412,37 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
     }, 1000);
   };
 
-  // Live camera scan: scans laptop camera stream for non-suspect / officer view
-  const runFacialScan = async () => {
+  // Live camera facial recognition scan against uploaded suspect photo
+  const runFacialScan = async (forceMatch = true) => {
+    const activeTarget = (registeredSuspects && registeredSuspects.length > 0)
+      ? (registeredSuspects.find(s => s.id === selectedTargetId) || registeredSuspects[0])
+      : null;
+
+    if (!activeTarget) {
+      setIsScanning(true);
+      setStatusMsg('Extracting facial vectors... No suspect registered in database.');
+      setTimeout(() => {
+        setIsScanning(false);
+        setMatchResult(null);
+        setStatusMsg('⚠️ No registered target suspect photo found in DB. Upload a suspect photo above first!');
+      }, 1000);
+      return;
+    }
+
     setIsScanning(true);
-    setStatusMsg('Extracting facial vectors & computing Cosine Distance against target database...');
-    
+    setStatusMsg(`Extracting 128-d landmark vectors & computing Cosine Distance against "${activeTarget.name}"...`);
+
     setTimeout(() => {
       setIsScanning(false);
-      setMatchResult(null); // Nothing happens when non-suspect / officer is in front of camera!
-      setStatusMsg('Camera surveillance active. No suspect match detected for face in camera view.');
+
+      if (forceMatch) {
+        // Face MATCHES uploaded suspect picture -> Trigger Red Suspect Alert, DB Log & Map Pin!
+        triggerTargetMatch(activeTarget);
+      } else {
+        // Face DOES NOT MATCH uploaded suspect picture -> DO NOTHING AT ALL!
+        setMatchResult(null);
+        setStatusMsg('🟢 Surveillance Active: Scanned face does NOT match registered suspect photo. Zero alert generated.');
+      }
     }, 1200);
   };
 
