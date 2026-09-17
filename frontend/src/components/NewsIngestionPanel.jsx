@@ -82,12 +82,12 @@ export default function NewsIngestionPanel({ onRefreshGraph, currentCase, onSele
               style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '4px 10px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}
             >
               <option value="ALL">🌐 All Cases Combined Network</option>
-              <optgroup label="📁 Synthetic Benchmark Cases [Dataset]">
+              <optgroup label="🎮 Demo Dataset Cases (Default Benchmark Graph)">
                 {casesList && casesList.filter(c => c.is_dataset || (c.title && c.title.includes('[Dataset]'))).map((c) => (
                   <option key={c.case_id} value={c.case_id}>{c.title} ({c.node_count} Nodes)</option>
                 ))}
               </optgroup>
-              <optgroup label="📰 OSINT Live News Feed Cases">
+              <optgroup label="📰 OSINT Live News Ingestion Feed Cases">
                 {casesList && casesList.filter(c => !c.is_dataset && (!c.title || !c.title.includes('[Dataset]'))).map((c) => (
                   <option key={c.case_id} value={c.case_id}>{c.title} ({c.node_count} Nodes)</option>
                 ))}
@@ -234,14 +234,14 @@ export default function NewsIngestionPanel({ onRefreshGraph, currentCase, onSele
           }}
         >
           <option value="ALL">🌐 View All Cases Combined Network</option>
-          <optgroup label="📁 Synthetic Benchmark Cases [Dataset]">
+          <optgroup label="🎮 Demo Dataset Cases (Default Benchmark Graph)">
             {casesList && casesList.filter(c => c.is_dataset || (c.title && c.title.includes('[Dataset]'))).map((c) => (
               <option key={c.case_id} value={c.case_id}>
                 {c.title} ({c.node_count} Nodes)
               </option>
             ))}
           </optgroup>
-          <optgroup label="📰 OSINT Live News Feed Cases">
+          <optgroup label="📰 OSINT Live News Ingestion Feed Cases">
             {casesList && casesList.filter(c => !c.is_dataset && (!c.title || !c.title.includes('[Dataset]'))).map((c) => (
               <option key={c.case_id} value={c.case_id}>
                 {c.title} ({c.node_count} Nodes)

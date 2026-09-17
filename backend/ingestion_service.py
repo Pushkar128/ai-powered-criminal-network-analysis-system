@@ -8,24 +8,53 @@ from backend.analytics_service import record_audit_action
 def process_raw_fir_text(fir_text: str, case_id: str = "CASE-NEW"):
     """
     NLP entity extraction logic to parse unstructured FIR text and inject extracted nodes/edges into Neo4j.
-    Extracts Suspects, Phone Numbers, Vehicles, Locations, and Amounts.
+    Extracts Suspects, Phone Numbers, Vehicles, Locations, and Relationships accurately regardless of casing.
     """
-    # Simple regex-based NLP entity extractor for demonstration/competition speed
     phones = list(set(re.findall(r'\+?\d{10,12}', fir_text)))
     vehicles = list(set(re.findall(r'[A-Z]{2}[-\s]?\d{2}[-\s]?[A-Z]{1,2}[-\s]?\d{4}', fir_text)))
     amounts = list(set(re.findall(r'₹?\s?\d+,\d+,\d+|\d+\s?Lakh|\d+\s?Crore', fir_text)))
     
-    STOPWORDS = {"Has", "Recently", "Contacted", "Called", "Met", "Spoke", "With", "To", "From", "And", "The", "In", "At", "Near", "On", "Of", "For", "Is", "Was", "They", "He", "She", "It", "Case", "Update", "Fir", "New", "Yesterday", "Today"}
+    text_clean = fir_text.strip()
+    rel_patterns = [
+        (r'(.+?)\s+(?:has\s+|have\s+|recently\s+)?(?:contacted\s+with|contacted|called|spoke\s+with|telephoned|phoned)\s+(.+)', 'CONTACTED'),
+        (r'(.+?)\s+(?:has\s+|have\s+|recently\s+)?(?:met\s+with|met|spotted\s+with|seen\s+with)\s+(.+)', 'SPOTTED_WITH'),
+        (r'(.+?)\s+(?:has\s+|have\s+|recently\s+)?(?:paid|transferred\s+funds\s+to|sent\s+money\s+to|transferred\s+to)\s+(.+)', 'FINANCIAL_TRANSFER'),
+        (r'(.+?)\s+(?:has\s+|have\s+|recently\s+)?(?:associated\s+with|linked\s+to|connected\s+to)\s+(.+)', 'ASSOCIATED_WITH')
+    ]
+    
+    names = []
+    rel_label = "CONTACTED"
+    pattern_matched = False
+    
+    for pat, rtype in rel_patterns:
+        m = re.search(pat, text_clean, re.IGNORECASE)
+        if m:
+            p1_raw = m.group(1).strip()
+            p2_raw = m.group(2).strip()
+            
+            filler = r'^(?:accused|suspect|target|mr|mrs|dr|at|in|near|the)\s+'
+            p1_clean = re.sub(filler, '', p1_raw, flags=re.IGNORECASE).strip()
+            p2_clean = re.sub(filler, '', p2_raw, flags=re.IGNORECASE).strip()
+            
+            p1_name = " ".join([w.capitalize() for w in p1_clean.split()])
+            p2_name = " ".join([w.capitalize() for w in p2_clean.split()])
+            
+            if p1_name and p2_name:
+                names = [p1_name, p2_name]
+                rel_label = rtype
+                pattern_matched = True
+                break
 
-    # Extract names following typical FIR patterns or free-form sentence capitalized words
-    name_matches = re.findall(r'(?:Accused|Suspect|Alias|Named)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)', fir_text)
-    if not name_matches:
-        raw_words = re.findall(r'\b[A-Z][a-z]+\b', fir_text)
-        name_matches = [w for w in raw_words if w not in STOPWORDS]
+    if not pattern_matched:
+        STOPWORDS = {"has", "have", "recently", "contacted", "called", "met", "spoke", "with", "to", "from", "and", "the", "in", "at", "near", "on", "of", "for", "is", "was", "they", "he", "she", "it", "case", "update", "fir", "new", "yesterday", "today"}
+        raw_words = re.findall(r'\b[A-Za-z]+\b', text_clean)
+        clean_words = [w.capitalize() for w in raw_words if w.lower() not in STOPWORDS]
+        if clean_words:
+            names = list(dict.fromkeys(clean_words))
+        else:
+            names = ["Target Person"]
     
-    names = list(dict.fromkeys(name_matches)) if name_matches else ["Unknown Suspect"]
-    
-    locations_matches = re.findall(r'(?:at|near|location|area of)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)', fir_text)
+    locations_matches = re.findall(r'(?:at|near|location|area of)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)', fir_text, re.IGNORECASE)
     locations = list(set(locations_matches)) if locations_matches else []
 
     nodes_created = []
@@ -39,28 +68,18 @@ def process_raw_fir_text(fir_text: str, case_id: str = "CASE-NEW"):
                 ON CREATE SET c.name = $case_id, c.type = 'CrimeCase', c.created_at = timestamp()
             """, case_id=case_id)
             
-            # Create Suspect Nodes
+            # Create Suspect / Person Nodes
             for idx, name in enumerate(names):
-                suspect_id = f"PER_{name.upper()[:6]}_{int(abs(hash(name)) % 10000)}"
+                suspect_id = f"PER_{name.upper().replace(' ', '_')[:12]}_{int(abs(hash(name)) % 10000)}"
                 session.run("""
                     MERGE (p:Entity {name: $name})
                     ON CREATE SET p.id = $suspect_id, p.type = 'Person', p.status = 'SUSPECT', p.case_id = $case_id
                     MERGE (c:Entity {id: $case_id})
-                    MERGE (p)-[:MENTIONED_IN_CASE]->(c)
+                    MERGE (p)-[:MENTIONED_IN_CASE {case_id: $case_id}]->(c)
                 """, name=name, suspect_id=suspect_id, case_id=case_id)
                 nodes_created.append({"id": suspect_id, "name": name, "type": "Person", "case_id": case_id})
 
-            # Detect contextual relationship between persons
-            text_lower = fir_text.lower()
-            if any(k in text_lower for k in ["contact", "call", "phone", "talk", "spoke"]):
-                rel_label = "CONTACTED"
-            elif any(k in text_lower for k in ["meet", "met", "spotted", "seen"]):
-                rel_label = "SPOTTED_WITH"
-            elif any(k in text_lower for k in ["pay", "paid", "transfer", "fund", "money"]):
-                rel_label = "FINANCIAL_TRANSFER"
-            else:
-                rel_label = "ASSOCIATED_WITH"
-
+            # Create edges between detected persons
             if len(nodes_created) >= 2:
                 for i in range(len(nodes_created) - 1):
                     p1 = nodes_created[i]["id"]

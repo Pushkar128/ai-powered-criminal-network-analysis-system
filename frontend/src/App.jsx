@@ -105,49 +105,92 @@ export default function App() {
     let nodesToAdd = [...newNodes];
     let edgesToAdd = [...newEdges];
 
-    if (nodesToAdd.length === 0 && rawText) {
-      const stopwords = new Set(["Has", "Recently", "Contacted", "Called", "Met", "Spoke", "With", "To", "From", "And", "The", "In", "At", "Near", "On", "Of", "For", "Is", "Was", "They", "He", "She", "It", "Case", "Update", "Fir", "New", "Yesterday", "Today"]);
-      const matches = (rawText.match(/\b[A-Z][a-z]+\b/g) || []).filter(w => !stopwords.has(w));
-      const uniqueNames = [...new Set(matches)];
+    if (rawText) {
+      const textClean = rawText.trim();
+      const relPatterns = [
+        { regex: /(.+?)\s+(?:has\s+|have\s+|recently\s+)?(?:contacted\s+with|contacted|called|spoke\s+with|telephoned|phoned)\s+(.+)/i, rel: 'CONTACTED' },
+        { regex: /(.+?)\s+(?:has\s+|have\s+|recently\s+)?(?:met\s+with|met|spotted\s+with|seen\s+with)\s+(.+)/i, rel: 'SPOTTED_WITH' },
+        { regex: /(.+?)\s+(?:has\s+|have\s+|recently\s+)?(?:paid|transferred\s+funds\s+to|sent\s+money\s+to|transferred\s+to)\s+(.+)/i, rel: 'FINANCIAL_TRANSFER' },
+        { regex: /(.+?)\s+(?:has\s+|have\s+|recently\s+)?(?:associated\s+with|linked\s+to|connected\s+to)\s+(.+)/i, rel: 'ASSOCIATED_WITH' }
+      ];
 
-      uniqueNames.forEach((name, idx) => {
-        const existingNode = nodesData.find(n => n.name && n.name.toLowerCase().includes(name.toLowerCase()));
-        if (!existingNode) {
-          nodesToAdd.push({
-            id: `PER_${name.toUpperCase()}_${Math.floor(Math.random() * 1000)}`,
-            name: name,
-            label: name,
-            type: 'Person',
-            threat_score: 78,
-            x: 280 + idx * 110,
-            y: 220 + (idx % 2) * 70
-          });
-        }
-      });
+      let extractedNames = [];
+      let relLabel = "CONTACTED";
+      let matched = false;
 
-      if (uniqueNames.length >= 2) {
-        const textLower = rawText.toLowerCase();
-        let rel = "ASSOCIATED_WITH";
-        if (textLower.includes("contact") || textLower.includes("call") || textLower.includes("phone")) rel = "CONTACTED";
-        else if (textLower.includes("meet") || textLower.includes("met") || textLower.includes("spotted")) rel = "SPOTTED_WITH";
-        else if (textLower.includes("pay") || textLower.includes("transfer") || textLower.includes("money")) rel = "FINANCIAL_TRANSFER";
+      for (let p of relPatterns) {
+        const m = textClean.match(p.regex);
+        if (m) {
+          const filler = /^(?:accused|suspect|target|mr|mrs|dr|at|in|near|the)\s+/i;
+          const p1 = m[1].replace(filler, '').trim();
+          const p2 = m[2].replace(filler, '').trim();
 
-        for (let i = 0; i < uniqueNames.length - 1; i++) {
-          const name1 = uniqueNames[i];
-          const name2 = uniqueNames[i + 1];
-          const n1 = nodesData.find(n => n.name && n.name.toLowerCase().includes(name1.toLowerCase())) || nodesToAdd.find(n => n.name && n.name.toLowerCase().includes(name1.toLowerCase()));
-          const n2 = nodesData.find(n => n.name && n.name.toLowerCase().includes(name2.toLowerCase())) || nodesToAdd.find(n => n.name && n.name.toLowerCase().includes(name2.toLowerCase()));
+          const name1 = p1.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+          const name2 = p2.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
 
-          if (n1 && n2) {
-            edgesToAdd.push({
-              source: n1.id,
-              target: n2.id,
-              relationship: rel,
-              weight: 0.9,
-              is_high_risk: true
-            });
+          if (name1 && name2) {
+            extractedNames = [name1, name2];
+            relLabel = p.rel;
+            matched = true;
+            break;
           }
         }
+      }
+
+      if (!matched) {
+        const stopwords = new Set(["has", "have", "recently", "contacted", "called", "met", "spoke", "with", "to", "from", "and", "the", "in", "at", "near", "on", "of", "for", "is", "was", "they", "he", "she", "it", "case", "update", "fir", "new", "yesterday", "today"]);
+        const words = textClean.match(/\b[A-Za-z]+\b/g) || [];
+        const cleanWords = words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).filter(w => !stopwords.has(w.toLowerCase()));
+        if (cleanWords.length >= 2) {
+          extractedNames = [cleanWords[0], cleanWords[1]];
+        } else if (cleanWords.length === 1) {
+          extractedNames = [cleanWords[0]];
+        }
+      }
+
+      if (extractedNames.length >= 2) {
+        const n1Name = extractedNames[0];
+        const n2Name = extractedNames[1];
+
+        let n1 = nodesData.find(n => n.name && n.name.toLowerCase() === n1Name.toLowerCase()) ||
+                 nodesToAdd.find(n => n.name && n.name.toLowerCase() === n1Name.toLowerCase());
+        let n2 = nodesData.find(n => n.name && n.name.toLowerCase() === n2Name.toLowerCase()) ||
+                 nodesToAdd.find(n => n.name && n.name.toLowerCase() === n2Name.toLowerCase());
+
+        if (!n1) {
+          n1 = {
+            id: `PER_${n1Name.toUpperCase().replace(/\s+/g, '_')}_${Math.floor(Math.random() * 1000)}`,
+            name: n1Name,
+            label: n1Name,
+            type: 'Person',
+            threat_score: 82,
+            x: 280,
+            y: 220
+          };
+          nodesToAdd.push(n1);
+        }
+
+        if (!n2) {
+          n2 = {
+            id: `PER_${n2Name.toUpperCase().replace(/\s+/g, '_')}_${Math.floor(Math.random() * 1000)}`,
+            name: n2Name,
+            label: n2Name,
+            type: 'Person',
+            threat_score: 75,
+            x: 420,
+            y: 280
+          };
+          nodesToAdd.push(n2);
+        }
+
+        edgesToAdd.push({
+          source: n1.id,
+          target: n2.id,
+          relationship: relLabel,
+          label: relLabel,
+          weight: 0.9,
+          is_high_risk: true
+        });
       }
     }
 
@@ -170,6 +213,7 @@ export default function App() {
           source: e.source,
           target: e.target,
           relationship: e.label || e.relationship || 'CONNECTED',
+          label: e.label || e.relationship || 'CONNECTED',
           weight: e.weight || 0.9,
           is_high_risk: true
         })).filter(e => !existingKeys.has(`${e.source}->${e.target}`));
@@ -381,12 +425,34 @@ export default function App() {
               />
             </div>
 
-            <div className="entity-legend">
-              <div className="legend-item"><span className="dot dot-person"></span> Suspect / Person</div>
-              <div className="legend-item"><span className="dot dot-phone"></span> CDR / Phone</div>
-              <div className="legend-item"><span className="dot dot-vehicle"></span> Vehicle</div>
-              <div className="legend-item"><span className="dot dot-location"></span> Location</div>
-              <div className="legend-item"><span className="dot dot-org"></span> Syndicate / Org</div>
+            <div className="entity-legend" style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', marginTop: '12px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary-navy)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                🎨 Node Color Index & Legend
+              </div>
+              <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', marginBottom: '6px', fontWeight: 600 }}>
+                <span className="dot" style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#dc2626', display: 'inline-block', boxShadow: '0 0 6px rgba(220, 38, 38, 0.4)' }}></span> 
+                <span>🔴 Red: Suspect / Person Entity</span>
+              </div>
+              <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', marginBottom: '6px', fontWeight: 600 }}>
+                <span className="dot" style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#2563eb', display: 'inline-block', boxShadow: '0 0 6px rgba(37, 99, 235, 0.4)' }}></span> 
+                <span>🔵 Blue: Phone Number / CDR</span>
+              </div>
+              <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', marginBottom: '6px', fontWeight: 600 }}>
+                <span className="dot" style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#d97706', display: 'inline-block', boxShadow: '0 0 6px rgba(217, 119, 6, 0.4)' }}></span> 
+                <span>🟠 Orange: Vehicle Node</span>
+              </div>
+              <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', marginBottom: '6px', fontWeight: 600 }}>
+                <span className="dot" style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#16a34a', display: 'inline-block', boxShadow: '0 0 6px rgba(22, 163, 74, 0.4)' }}></span> 
+                <span>🟢 Green: Location / Safehouse</span>
+              </div>
+              <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', marginBottom: '6px', fontWeight: 600 }}>
+                <span className="dot" style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#9333ea', display: 'inline-block', boxShadow: '0 0 6px rgba(147, 51, 234, 0.4)' }}></span> 
+                <span>🟣 Purple: Syndicate / Front Org</span>
+              </div>
+              <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 600 }}>
+                <span className="dot" style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#991b1b', display: 'inline-block', boxShadow: '0 0 6px rgba(153, 27, 27, 0.4)' }}></span> 
+                <span>🔴 Crimson: OSINT News Event</span>
+              </div>
             </div>
           </div>
         </aside>
