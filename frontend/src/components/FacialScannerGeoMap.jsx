@@ -61,20 +61,32 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
     fetch(`${API_BASE_URL}/api/surveillance/registered-suspects`)
       .then(res => res.json())
       .then(data => {
-        if (data.suspects && data.suspects.length > 0) {
+        if (data.suspects && Array.isArray(data.suspects)) {
           setRegisteredSuspects(prev => {
-            const combined = [...data.suspects];
-            (prev || []).forEach(p => {
-              if (!combined.some(c => c.id === p.id || c.name === p.name)) {
-                combined.push(p);
+            const localItems = prev || [];
+            const merged = [...localItems];
+            
+            data.suspects.forEach(b => {
+              const idx = merged.findIndex(l => l.id === b.id || (l.name && b.name && l.name.toLowerCase() === b.name.toLowerCase()));
+              if (idx >= 0) {
+                const existing = merged[idx];
+                merged[idx] = {
+                  ...b,
+                  ...existing,
+                  preview: existing.preview || existing.photo_url || b.photo_url,
+                  photo_url: existing.preview || existing.photo_url || b.photo_url
+                };
+              } else {
+                merged.push(b);
               }
             });
+
             try {
-              localStorage.setItem('nexus_registered_suspects', JSON.stringify(combined));
+              localStorage.setItem('nexus_registered_suspects', JSON.stringify(merged));
             } catch (e) {}
-            return combined;
+            return merged;
           });
-          setSelectedTargetId(prev => prev || data.suspects[0].id);
+          setSelectedTargetId(prev => prev || (data.suspects[0] && data.suspects[0].id));
         }
       })
       .catch(() => {});
@@ -829,7 +841,7 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
             <div style={{ display: 'flex', gap: '14px', overflowX: 'auto', paddingBottom: '6px' }}>
               {registeredSuspects.map((s) => {
                 const isSelected = selectedTargetId === s.id;
-                const photoSrc = s.preview || (s.photo_url ? (s.photo_url.startsWith('http') ? s.photo_url : `${API_BASE_URL}${s.photo_url}`) : '');
+                const photoSrc = s.preview || (s.photo_url ? (s.photo_url.startsWith('http') || s.photo_url.startsWith('data:') ? s.photo_url : `${API_BASE_URL}${s.photo_url}`) : '');
                 return (
                   <div
                     key={s.id}

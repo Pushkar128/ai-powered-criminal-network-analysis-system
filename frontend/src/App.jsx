@@ -29,6 +29,19 @@ const INITIAL_NODES = [
   { id: 'PHN_9003', name: '+91 9123456789', label: 'Phone', threat_score: 50, type: 'CDR', x: 100, y: 20 }
 ];
 
+const INITIAL_EDGES = [
+  { source: 'PER_1001', target: 'PHN_9001', relationship: 'USES_PHONE', weight: 0.95, is_high_risk: true },
+  { source: 'PER_1001', target: 'ORG_5002', relationship: 'CONTROLS', weight: 0.90, is_high_risk: true },
+  { source: 'PER_1001', target: 'PER_1002', relationship: 'ASSOCIATE_OF', weight: 0.85 },
+  { source: 'PER_1002', target: 'PHN_9002', relationship: 'USES_PHONE', weight: 0.80 },
+  { source: 'PER_1002', target: 'LOC_7001', relationship: 'FREQUENTS', weight: 0.88, is_high_risk: true },
+  { source: 'PER_1003', target: 'LOC_7001', relationship: 'MEETS_AT', weight: 0.75 },
+  { source: 'PER_1003', target: 'ORG_5002', relationship: 'EMPLOYED_BY', weight: 0.70 },
+  { source: 'PER_1004', target: 'VEH_4001', relationship: 'DRIVES', weight: 0.82 },
+  { source: 'PER_1004', target: 'PHN_9003', relationship: 'USES_PHONE', weight: 0.75 },
+  { source: 'PER_1001', target: 'VEH_4001', relationship: 'OWNED_BY', weight: 0.89, is_high_risk: true }
+];
+
 const FINANCIAL_FRAUD_NODES = [
   { id: 'ORG_5002', name: 'Apex Global Logistics', label: 'Apex Global Logistics', type: 'Organization', threat_score: 94, alias: 'Front Syndicate', x: 260, y: 180 },
   { id: 'ACC_9901', name: 'Dharavi Shell Account #4102', label: 'Dharavi Shell Account #4102', type: 'BankAccount', threat_score: 89, alias: 'Mule Account', x: 120, y: 300 },
