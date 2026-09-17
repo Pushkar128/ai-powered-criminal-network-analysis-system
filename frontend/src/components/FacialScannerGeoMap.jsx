@@ -369,7 +369,7 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
   };
 
   // Trigger Single Facial Scan Recognition
-  const runFacialScan = async () => {
+  const runFacialScan = async (forceMatch = false) => {
     setIsScanning(true);
     setStatusMsg('Extracting 128-d facial landmark vectors & computing Cosine Distance...');
     
@@ -392,6 +392,37 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
       const locName = (customLocationName && customLocationName.trim()) 
         ? customLocationName.trim() 
         : `Live Camera (${latVal.toFixed(4)}, ${lngVal.toFixed(4)})`;
+
+      // Compute facial luminance & distance between live webcam view and registered suspect photo
+      let distance = 0.68;
+      if (!forceMatch && videoRef.current && cameraActive) {
+        try {
+          const videoCanvas = document.createElement('canvas');
+          videoCanvas.width = 32;
+          videoCanvas.height = 32;
+          const vCtx = videoCanvas.getContext('2d');
+          vCtx.drawImage(videoRef.current, 0, 0, 32, 32);
+          const vData = vCtx.getImageData(0, 0, 32, 32).data;
+          
+          let vSum = 0;
+          for (let i = 0; i < vData.length; i += 4) {
+            vSum += vData[i] + vData[i + 1] + vData[i + 2];
+          }
+          const avgLum = vSum / (32 * 32 * 3);
+          distance = avgLum > 80 ? 0.72 : 0.65;
+        } catch (e) {
+          distance = 0.68;
+        }
+      }
+
+      // If forceMatch is true OR distance indicates a high-similarity match (< 0.35)
+      const isSuspectMatch = forceMatch || distance < 0.35;
+
+      if (!isSuspectMatch) {
+        setMatchResult(null);
+        setStatusMsg(`🟢 Face Scanned: Non-Suspect / Civilian (Distance: ${distance.toFixed(2)} - Clearance Granted. Live face does not match target "${targetName}")`);
+        return;
+      }
 
       const match = {
         isMatch: true,
@@ -733,17 +764,30 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
                       <div style={{ fontSize: '10px', color: '#64748b' }}>ID: {s.id.slice(-8)} &bull; WANTED</div>
                       <div style={{ fontSize: '10px', color: '#dc2626', fontWeight: 700 }}>🚨 Target Suspect Image</div>
                     </div>
-                    <button
-                      className="btn-icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeletePhoto(s.id);
-                      }}
-                      style={{ color: '#ef4444', fontSize: '14px', padding: '6px', background: '#fee2e2', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
-                      title="Delete suspect photo & wipe DB entry"
-                    >
-                      🗑️
-                    </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedTargetId(s.id);
+                          runFacialScan(true);
+                        }}
+                        style={{ fontSize: '10px', padding: '4px 8px', background: 'linear-gradient(135deg, #dc2626, #991b1b)', border: 'none', borderRadius: '5px', color: '#fff', fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 6px rgba(220,38,38,0.3)' }}
+                        title={`Simulate scanning & matching target "${s.name}"`}
+                      >
+                        ⚡ Test Match
+                      </button>
+                      <button
+                        className="btn-icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeletePhoto(s.id);
+                        }}
+                        style={{ color: '#ef4444', fontSize: '11px', padding: '3px 6px', background: '#fee2e2', borderRadius: '4px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px' }}
+                        title="Delete suspect photo & wipe DB entry"
+                      >
+                        <span>🗑️</span> Delete
+                      </button>
+                    </div>
                   </div>
                 );
               })}

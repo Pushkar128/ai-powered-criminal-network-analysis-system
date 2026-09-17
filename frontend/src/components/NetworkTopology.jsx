@@ -9,20 +9,58 @@ export default function NetworkTopology({ nodesData, edgesData, selectedNode, on
   const [lastMouse, setLastMouse] = useState({ x: 0, y: 0 });
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
 
-  // Dynamically assign x, y coordinates to nodes fetched from Neo4j API
+  // Dynamically assign organized concentric spherical ring coordinates to nodes
   useEffect(() => {
     if (!nodesData || nodesData.length === 0) return;
     const center = { x: 300, y: 220 };
-    
-    nodesData.forEach((node, idx) => {
-      if (node.x === undefined || node.y === undefined) {
-        // Arrange in expanding spiral rings for visual clarity
-        const angle = idx * 0.65 + (idx % 2);
-        const ring = Math.floor(idx / 8) + 1;
-        const radius = 100 + ring * 75;
-        node.x = center.x + radius * Math.cos(angle);
-        node.y = center.y + radius * Math.sin(angle);
+
+    const ring0 = []; // Core Kingpins (threat >= 85)
+    const ring1 = []; // Suspect Persons
+    const ring2 = []; // Phones & Vehicles
+    const ring3 = []; // Locations, Orgs, News Events
+
+    nodesData.forEach((node) => {
+      const rawType = (node.type || node.label || '').toUpperCase();
+      const threat = node.threat_score || 50;
+
+      if (threat >= 85 && (rawType.includes('PERSON') || rawType.includes('SUSPECT'))) {
+        ring0.push(node);
+      } else if (rawType.includes('PERSON') || rawType.includes('SUSPECT')) {
+        ring1.push(node);
+      } else if (rawType.includes('PHONE') || rawType.includes('CDR') || rawType.includes('PHN') || rawType.includes('VEHICLE') || rawType.includes('VEH')) {
+        ring2.push(node);
+      } else {
+        ring3.push(node);
       }
+    });
+
+    // Place Ring 0 (Center Hub - Radius 75)
+    ring0.forEach((node, i) => {
+      const angle = (i / Math.max(1, ring0.length)) * 2 * Math.PI - Math.PI / 2;
+      const r = ring0.length === 1 ? 0 : 75;
+      node.x = center.x + r * Math.cos(angle);
+      node.y = center.y + r * Math.sin(angle);
+    });
+
+    // Place Ring 1 (Radius 165)
+    ring1.forEach((node, i) => {
+      const angle = (i / Math.max(1, ring1.length)) * 2 * Math.PI - Math.PI / 2 + 0.3;
+      node.x = center.x + 165 * Math.cos(angle);
+      node.y = center.y + 165 * Math.sin(angle);
+    });
+
+    // Place Ring 2 (Radius 255)
+    ring2.forEach((node, i) => {
+      const angle = (i / Math.max(1, ring2.length)) * 2 * Math.PI - Math.PI / 2 + 0.5;
+      node.x = center.x + 255 * Math.cos(angle);
+      node.y = center.y + 255 * Math.sin(angle);
+    });
+
+    // Place Ring 3 (Radius 340)
+    ring3.forEach((node, i) => {
+      const angle = (i / Math.max(1, ring3.length)) * 2 * Math.PI - Math.PI / 2 + 0.2;
+      node.x = center.x + 340 * Math.cos(angle);
+      node.y = center.y + 340 * Math.sin(angle);
     });
   }, [nodesData]);
 
@@ -131,7 +169,7 @@ export default function NetworkTopology({ nodesData, edgesData, selectedNode, on
     ctx.scale(scale, scale);
 
     // Draw Light Grid Background
-    ctx.strokeStyle = '#e2e8f0';
+    ctx.strokeStyle = '#f1f5f9';
     ctx.lineWidth = 1;
     for (let x = -1000; x < 2500; x += 40) {
       ctx.beginPath(); ctx.moveTo(x, -1000); ctx.lineTo(x, 2500); ctx.stroke();
@@ -139,6 +177,17 @@ export default function NetworkTopology({ nodesData, edgesData, selectedNode, on
     for (let y = -1000; y < 2500; y += 40) {
       ctx.beginPath(); ctx.moveTo(-1000, y); ctx.lineTo(2500, y); ctx.stroke();
     }
+
+    // Draw Concentric Spherical Orbit Rings (matching reference topology)
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 6]);
+    [75, 165, 255, 340].forEach(r => {
+      ctx.beginPath();
+      ctx.arc(300, 220, r, 0, Math.PI * 2);
+      ctx.stroke();
+    });
+    ctx.setLineDash([]);
 
     // Draw Edges
     const validIds = new Set(filteredNodes.map(n => n.id));

@@ -70,9 +70,40 @@ export default function SuspectDossier({ selectedNode, edgesData, onClose, onDel
             </div>
           </div>
 
-          <div className="threat-gauge-box">
-            <div className="threat-score-num">{selectedNode.threat_score || 85} / 100</div>
-            <div className="threat-score-label">Automated AI Threat Index</div>
+          <div className="threat-gauge-box" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <div>
+              <div style={{ fontSize: '10px', textTransform: 'uppercase', color: '#64748b', fontWeight: 800, letterSpacing: '0.5px' }}>
+                COMPUTED THREAT INDEX
+              </div>
+              <div style={{ fontSize: '22px', fontWeight: 900, color: '#dc2626', marginTop: '2px' }}>
+                {selectedNode.threat_score || 85} <span style={{ fontSize: '13px', color: '#94a3b8' }}>/ 100</span>
+              </div>
+              <span className="badge badge-high" style={{ marginTop: '4px', display: 'inline-block', fontSize: '10px', padding: '2px 8px', fontWeight: 800 }}>
+                {(selectedNode.threat_score || 85) >= 80 ? 'CRITICAL RISK' : 'ELEVATED RISK'}
+              </span>
+            </div>
+
+            {/* Circular Gauge Ring Meter */}
+            <div style={{ position: 'relative', width: '56px', height: '56px' }}>
+              <svg width="56" height="56" viewBox="0 0 36 36">
+                <path
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="#e2e8f0"
+                  strokeWidth="3.5"
+                />
+                <path
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="#dc2626"
+                  strokeWidth="3.5"
+                  strokeDasharray={`${selectedNode.threat_score || 85}, 100`}
+                />
+              </svg>
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '900', color: '#dc2626' }}>
+                {selectedNode.threat_score || 85}%
+              </div>
+            </div>
           </div>
 
           <button
