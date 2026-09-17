@@ -104,7 +104,7 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
     // Smoothly pan & zoom to the sighting's exact GPS location without resetting user view on next poll
     map.setView([sighting.lat, sighting.lng], 15, { animate: true });
     
-    const displayName = sighting.name === 'Target Suspect' ? 'Rashid Khan @Bhai' : sighting.name;
+    const displayName = sighting.name || 'Registered Target Suspect';
     const conf = sighting.confidence ? (sighting.confidence * 100).toFixed(1) : '95.8';
 
     const redPin = window.L.circleMarker([sighting.lat, sighting.lng], {
@@ -365,8 +365,12 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
       setIsScanning(false);
       
       const activeTarget = registeredSuspects.find(s => s.id === selectedTargetId) || registeredSuspects[0];
-      const targetName = activeTarget ? activeTarget.name : (customSuspectName.trim() || 'Rashid Khan @Bhai');
-      const targetId = activeTarget ? activeTarget.id : selectedSuspect;
+      if (!activeTarget) {
+        runNonSuspectScan();
+        return;
+      }
+      const targetName = activeTarget.name || 'Registered Target Suspect';
+      const targetId = activeTarget.id;
       const locName = customLocationName.trim() || `Live Camera (${userGps.lat.toFixed(4)}, ${userGps.lng.toFixed(4)})`;
 
       const match = {
@@ -587,7 +591,7 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
                 NATIONWIDE REMOTE CHECKPOINT SIGHTING ALERT!
               </div>
               <div style={{ fontSize: '13px', color: '#fef2f2' }}>
-                Suspect <b>{remoteAlert.name === 'Target Suspect' ? 'Rashid Khan @Bhai' : remoteAlert.name}</b> was just detected by a remote camera at <b>{remoteAlert.location_name}</b> (Confidence: {(remoteAlert.confidence * 100).toFixed(1)}%)
+                Suspect <b>{remoteAlert.name || 'Registered Target Suspect'}</b> was just detected by a remote camera at <b>{remoteAlert.location_name}</b> (Confidence: {(remoteAlert.confidence * 100).toFixed(1)}%)
               </div>
             </div>
           </div>
@@ -813,40 +817,11 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
 
           {/* Scanner Controls & Match Banner */}
           <div style={{ marginTop: '16px' }}>
-            {/* Subject Classification Selector */}
-            <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-main)' }}>
-                Scanning Subject at Camera:
-              </span>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <label style={{ fontSize: '11px', fontWeight: 600, color: subjectCategory === 'civilian' ? '#16a34a' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <input
-                    type="radio"
-                    name="subjectCategory"
-                    value="civilian"
-                    checked={subjectCategory === 'civilian'}
-                    onChange={() => setSubjectCategory('civilian')}
-                  />
-                  🟢 Officer / Civilian (Self Scan)
-                </label>
-                <label style={{ fontSize: '11px', fontWeight: 600, color: subjectCategory === 'suspect' ? '#dc2626' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <input
-                    type="radio"
-                    name="subjectCategory"
-                    value="suspect"
-                    checked={subjectCategory === 'suspect'}
-                    onChange={() => setSubjectCategory('suspect')}
-                  />
-                  🚨 Target Suspect
-                </label>
-              </div>
-            </div>
-
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               <button
                 className="btn btn-primary"
                 onClick={() => {
-                  if (subjectCategory === 'suspect' && registeredSuspects.length > 0) {
+                  if (registeredSuspects.length > 0) {
                     runFacialScan();
                   } else {
                     runNonSuspectScan();
@@ -858,12 +833,12 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
                   padding: '12px 18px',
                   fontSize: '14px',
                   fontWeight: 800,
-                  background: subjectCategory === 'suspect' && registeredSuspects.length > 0
+                  background: registeredSuspects.length > 0
                     ? 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)'
-                    : 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
-                  boxShadow: subjectCategory === 'suspect' && registeredSuspects.length > 0
+                    : 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                  boxShadow: registeredSuspects.length > 0
                     ? '0 4px 14px rgba(220, 38, 38, 0.4)'
-                    : '0 4px 14px rgba(22, 163, 74, 0.3)',
+                    : '0 4px 14px rgba(37, 99, 235, 0.3)',
                   border: 'none',
                   color: '#ffffff',
                   borderRadius: '8px',
@@ -1007,7 +982,7 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
                       {allSightings.map((s, i) => (
                         <tr key={i}>
                           <td style={{ fontSize: '11px', color: '#475569' }}>{formatTime(s.timestamp)}</td>
-                          <td style={{ fontWeight: 600, color: 'var(--primary-blue)' }}>{s.name === 'Target Suspect' ? 'Rashid Khan @Bhai' : s.name}</td>
+                          <td style={{ fontWeight: 600, color: 'var(--primary-blue)' }}>{s.name || 'Registered Target Suspect'}</td>
                           <td style={{ fontSize: '11px' }}>{s.location_name}</td>
                           <td><span className="badge badge-high">{(s.confidence * 100).toFixed(1)}%</span></td>
                           <td>
@@ -1049,7 +1024,7 @@ export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public
                       {activeSessionSightings.map((s, i) => (
                         <tr key={i}>
                           <td>{formatTime(s.timestamp)}</td>
-                          <td style={{ fontWeight: 600, color: '#dc2626' }}>{s.name === 'Target Suspect' ? 'Rashid Khan @Bhai' : s.name}</td>
+                          <td style={{ fontWeight: 600, color: '#dc2626' }}>{s.name || 'Registered Target Suspect'}</td>
                           <td>{s.location_name}</td>
                           <td><span className="badge badge-high">{(s.confidence * 100).toFixed(1)}%</span></td>
                           <td>

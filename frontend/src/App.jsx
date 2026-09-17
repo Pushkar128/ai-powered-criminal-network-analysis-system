@@ -315,7 +315,7 @@ export default function App() {
             </button>
           </div>
           <div style={{ fontSize: '13px', fontWeight: '700', marginBottom: '4px' }}>
-            Target: {globalAdminAlert.name === 'Target Suspect' ? 'Rashid Khan @Bhai' : globalAdminAlert.name}
+            Target: {globalAdminAlert.name || 'Registered Target Suspect'}
           </div>
           <div style={{ fontSize: '12px', color: '#fee2e2' }}>
             Location: {globalAdminAlert.location_name}
