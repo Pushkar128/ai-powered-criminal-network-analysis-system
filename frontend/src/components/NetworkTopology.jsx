@@ -82,7 +82,7 @@ export default function NetworkTopology({ nodesData, edgesData, selectedNode, on
     return '#0284c7';
   };
 
-  // Subgraph isolation: when selectedNode is active, show target + direct (1-hop) & indirect (2-hop) connections
+  // Subgraph isolation: STRICT 1-HOP DIRECT CONNECTIONS ONLY (target person + direct phone, vehicle, location & associate nodes)
   const activeNetworkIds = React.useMemo(() => {
     if (!selectedNode) return null;
 
@@ -92,19 +92,33 @@ export default function NetworkTopology({ nodesData, edgesData, selectedNode, on
       if (e.target === selectedNode.id) direct1Hop.add(e.source);
     });
 
-    const indirect2Hop = new Set();
-    (edgesData || []).forEach(e => {
-      if (direct1Hop.has(e.source) && e.target !== selectedNode.id) indirect2Hop.add(e.target);
-      if (direct1Hop.has(e.target) && e.source !== selectedNode.id) indirect2Hop.add(e.source);
-    });
-
     return {
       targetId: selectedNode.id,
       directIds: direct1Hop,
-      indirectIds: indirect2Hop,
-      allNetworkIds: new Set([selectedNode.id, ...direct1Hop, ...indirect2Hop])
+      allNetworkIds: new Set([selectedNode.id, ...direct1Hop])
     };
   }, [selectedNode, edgesData]);
+
+  // When selectedNode is active, arrange target at center and direct nodes in a clean radial circle around it
+  useEffect(() => {
+    if (!selectedNode || !activeNetworkIds) return;
+    const center = { x: 300, y: 220 };
+
+    const targetObj = nodesData.find(n => n.id === selectedNode.id);
+    if (targetObj) {
+      targetObj.x = center.x;
+      targetObj.y = center.y;
+    }
+
+    const directNodes = nodesData.filter(n => activeNetworkIds.directIds.has(n.id));
+    const radius = Math.max(160, Math.min(260, directNodes.length * 25));
+
+    directNodes.forEach((node, i) => {
+      const angle = (i / Math.max(1, directNodes.length)) * 2 * Math.PI - Math.PI / 2;
+      node.x = center.x + radius * Math.cos(angle);
+      node.y = center.y + radius * Math.sin(angle);
+    });
+  }, [selectedNode, activeNetworkIds, nodesData]);
 
   const filteredNodes = (nodesData || []).filter(node => {
     const rawType = (node.type || node.label || '').toUpperCase();
@@ -222,9 +236,13 @@ export default function NetworkTopology({ nodesData, edgesData, selectedNode, on
     });
     ctx.setLineDash([]);
 
-    // Draw Edges
+    // Draw Edges (If selectedNode is active, draw ONLY direct edges connected to target person!)
     const validIds = new Set(filteredNodes.map(n => n.id));
     (edgesData || []).forEach(edge => {
+      if (selectedNode) {
+        if (edge.source !== selectedNode.id && edge.target !== selectedNode.id) return;
+      }
+
       const sNode = nodesData.find(n => n.id === edge.source);
       const tNode = nodesData.find(n => n.id === edge.target);
 
@@ -232,13 +250,13 @@ export default function NetworkTopology({ nodesData, edgesData, selectedNode, on
         ctx.beginPath();
         ctx.moveTo(sNode.x, sNode.y);
         ctx.lineTo(tNode.x, tNode.y);
-        ctx.strokeStyle = edge.is_high_risk ? '#ef4444' : '#94a3b8';
-        ctx.lineWidth = (edge.weight || 0.5) * 2.5;
+        ctx.strokeStyle = edge.is_high_risk ? '#ef4444' : '#2563eb';
+        ctx.lineWidth = 2.5;
         ctx.stroke();
 
         const midX = (sNode.x + tNode.x) / 2;
         const midY = (sNode.y + tNode.y) / 2;
-        ctx.fillStyle = edge.is_high_risk ? '#dc2626' : '#475569';
+        ctx.fillStyle = edge.is_high_risk ? '#dc2626' : '#1e40af';
         ctx.font = 'bold 10px "Inter", sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(edge.label || edge.relationship || 'LINK', midX, midY);
@@ -394,9 +412,9 @@ export default function NetworkTopology({ nodesData, edgesData, selectedNode, on
           boxShadow: '0 4px 14px rgba(56, 189, 248, 0.3)'
         }}>
           <div>
-            <span style={{ fontWeight: 800, color: '#38bdf8' }}>🔍 TARGET SUBGRAPH ISOLATED VIEW</span>
+            <span style={{ fontWeight: 800, color: '#38bdf8' }}>🔍 DIRECT 1-HOP SUBGRAPH ACTIVE</span>
             <div style={{ fontSize: '11px', color: '#cbd5e1', marginTop: '2px' }}>
-              Showing target <b>{selectedNode.name || selectedNode.id}</b> + <b>{activeNetworkIds.directIds.size} Direct</b> & <b>{activeNetworkIds.indirectIds.size} Indirect</b> Connections ({filteredNodes.length} nodes)
+              Showing target <b>{selectedNode.name || selectedNode.id}</b> + <b>{activeNetworkIds.directIds.size} Direct Connected Nodes</b> (Phone, Vehicle, Location & Associates)
             </div>
           </div>
           <button
