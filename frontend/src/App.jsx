@@ -588,7 +588,7 @@ export default function App() {
                   </button>
                 )}
               </div>
-              <FacialScannerGeoMap nodesData={nodesData} />
+              <FacialScannerGeoMap nodesData={nodesData} userRole={userRole} />
             </section>
           )}
 

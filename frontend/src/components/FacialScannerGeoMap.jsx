@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { API_BASE_URL } from '../config';
 
-export default function FacialScannerGeoMap({ nodesData = [] }) {
+export default function FacialScannerGeoMap({ nodesData = [], userRole = 'public' }) {
   const videoRef = useRef(null);
   const fileInputRef = useRef(null);
   const mapContainerRef = useRef(null);
@@ -436,8 +436,8 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
   return (
     <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
       
-      {/* ADMIN INTEL SIGHTING BRIEFING POPUP MODAL */}
-      {showAdminPopup && (
+      {/* ADMIN INTEL SIGHTING BRIEFING POPUP MODAL (Admin Only) */}
+      {userRole === 'admin' && showAdminPopup && (
         <div style={{
           position: 'fixed',
           top: 0, left: 0, right: 0, bottom: 0,
@@ -791,54 +791,31 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
 
           {/* Scanner Controls & Match Banner */}
           <div style={{ marginTop: '16px' }}>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <div style={{ flex: 1, minWidth: '180px' }}>
-                <select
-                  value={subjectCategory}
-                  onChange={(e) => setSubjectCategory(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: '6px',
-                    border: '1px solid var(--border-color)',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    background: subjectCategory === 'suspect' ? '#fef2f2' : '#f0fdf4',
-                    color: subjectCategory === 'suspect' ? '#dc2626' : '#16a34a',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <option value="civilian">🟢 Civilian / Officer (Non-Suspect)</option>
-                  <option value="suspect">
-                    🚨 Target Suspect ({registeredSuspects.find(s => s.id === selectedTargetId)?.name || 'Rashid Khan @Bhai'})
-                  </option>
-                </select>
-              </div>
-
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               <button
                 className="btn btn-primary"
                 onClick={() => {
-                  if (subjectCategory === 'civilian') {
-                    runNonSuspectScan();
-                  } else {
+                  if (registeredSuspects.length > 0) {
                     runFacialScan();
+                  } else {
+                    runNonSuspectScan();
                   }
                 }}
                 disabled={!cameraActive || isScanning}
                 style={{
                   flex: 1,
-                  padding: '10px 14px',
-                  fontSize: '13px',
+                  padding: '12px 18px',
+                  fontSize: '14px',
                   fontWeight: 800,
-                  background: subjectCategory === 'suspect' 
-                    ? 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)' 
+                  background: registeredSuspects.length > 0
+                    ? 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)'
                     : 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                  boxShadow: subjectCategory === 'suspect' 
-                    ? '0 4px 14px rgba(220, 38, 38, 0.4)' 
+                  boxShadow: registeredSuspects.length > 0
+                    ? '0 4px 14px rgba(220, 38, 38, 0.4)'
                     : '0 4px 14px rgba(37, 99, 235, 0.3)',
                   border: 'none',
                   color: '#ffffff',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   cursor: !cameraActive || isScanning ? 'not-allowed' : 'pointer'
                 }}
               >
@@ -849,10 +826,10 @@ export default function FacialScannerGeoMap({ nodesData = [] }) {
                 <button
                   className="btn btn-secondary"
                   onClick={() => setMatchResult(null)}
-                  style={{ padding: '10px 14px', fontSize: '12px', fontWeight: 600 }}
+                  style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600 }}
                   title="Reset alert to scan next face"
                 >
-                  🔄 Scan Next
+                  🔄 Reset
                 </button>
               )}
             </div>
