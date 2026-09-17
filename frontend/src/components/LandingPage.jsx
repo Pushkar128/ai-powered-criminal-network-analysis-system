@@ -133,7 +133,7 @@ export default function LandingPage({ onEnterPortal, onAdminLogin }) {
           </button>
 
           <button
-            onClick={() => setShowAdminModal(true)}
+            onClick={openAdminModal}
             style={{
               background: '#1e293b',
               color: '#f8fafc',

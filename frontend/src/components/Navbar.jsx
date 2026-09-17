@@ -34,65 +34,65 @@ export default function Navbar({ nodesData, onSelectNode, isApiConnected, onOpen
         </div>
       </div>
 
-      <div className="search-container" style={{ width: '320px', position: 'relative' }}>
-        <div className="search-input-wrapper" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '8px', padding: '4px 10px', display: 'flex', alignItems: 'center' }}>
-          <svg className="search-icon" viewBox="0 0 24 24" style={{ width: '16px', height: '16px', color: '#94a3b8', marginRight: '6px' }}><path fill="currentColor" d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <div className="search-container" style={{ width: '460px', position: 'relative' }}>
+        <div className="search-input-wrapper" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '8px', padding: '5px 12px', display: 'flex', alignItems: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+          <svg className="search-icon" viewBox="0 0 24 24" style={{ width: '18px', height: '18px', color: '#38bdf8', marginRight: '8px' }}><path fill="currentColor" d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
           <input
             type="text"
-            placeholder="Search suspect, alias, phone, vehicle..."
+            placeholder="Search suspect name, alias, phone, vehicle, location..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
               setDropdownOpen(true);
             }}
             onFocus={() => setDropdownOpen(true)}
-            style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', fontSize: '12px', outline: 'none' }}
+            style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', fontSize: '13px', outline: 'none', fontWeight: '500' }}
           />
-          <button style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: '4px', padding: '3px 8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>
-            Pivot
+          <button style={{ background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#fff', border: 'none', borderRadius: '6px', padding: '5px 14px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 6px rgba(37,99,235,0.4)' }}>
+            <span>🔍</span> Search
           </button>
         </div>
 
         {dropdownOpen && searchQuery.trim() !== '' && (
-          <div className="search-dropdown" style={{ position: 'absolute', top: '42px', left: 0, right: 0, background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', maxHeight: '300px', overflowY: 'auto', zIndex: 1000, boxShadow: '0 10px 25px rgba(0,0,0,0.15)' }}>
+          <div className="search-dropdown" style={{ position: 'absolute', top: '46px', left: 0, right: 0, background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '10px', maxHeight: '320px', overflowY: 'auto', zIndex: 1000, boxShadow: '0 12px 30px rgba(0,0,0,0.2)' }}>
             {filteredMatches.length > 0 ? (
               filteredMatches.map(m => (
-                <div key={m.id} className="search-dropdown-item" onClick={() => handleSelect(m)} style={{ padding: '8px 12px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div key={m.id} className="search-dropdown-item" onClick={() => handleSelect(m)} style={{ padding: '10px 14px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: '12px', color: '#0f172a' }}>{m.name}</div>
-                    <div style={{ fontSize: '10px', color: '#64748b' }}>{m.id} &bull; {m.label || m.type}</div>
+                    <div style={{ fontWeight: 700, fontSize: '13px', color: '#0f172a' }}>{m.name}</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>{m.id} &bull; {m.label || m.type}</div>
                   </div>
-                  <span className="badge badge-high" style={{ fontSize: '10px', padding: '2px 6px' }}>{m.threat_score || 50}</span>
+                  <span className="badge badge-high" style={{ fontSize: '10px', padding: '3px 8px', fontWeight: 800 }}>Threat: {m.threat_score || 50}</span>
                 </div>
               ))
             ) : (
-              <div style={{ padding: '10px', color: '#64748b', fontSize: '12px', textAlign: 'center' }}>No matching suspect entities found</div>
+              <div style={{ padding: '12px', color: '#64748b', fontSize: '12px', textAlign: 'center' }}>No matching suspect entities found</div>
             )}
           </div>
         )}
       </div>
 
-      <div className="header-status" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div className="header-status" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         {userRole === 'admin' && (
-          <span style={{ background: 'rgba(220, 38, 38, 0.15)', color: '#fca5a5', border: '1px solid #ef444460', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 800 }}>
+          <span style={{ background: 'rgba(220, 38, 38, 0.2)', color: '#fca5a5', border: '1px solid #ef444490', padding: '5px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 800, letterSpacing: '0.5px', boxShadow: '0 0 10px rgba(220,38,38,0.2)' }}>
             🛡️ Senior Command Admin
           </span>
         )}
 
-        <button onClick={onGoHome} style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '5px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <button onClick={onGoHome} style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', transition: 'all 0.2s' }}>
           <span>🏠</span> Home
         </button>
 
-        <button onClick={onOpenUpload} style={{ background: '#2563eb', color: '#ffffff', border: 'none', padding: '5px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 8px rgba(37,99,235,0.3)' }}>
+        <button onClick={onOpenUpload} style={{ background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#ffffff', border: 'none', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', boxShadow: '0 4px 12px rgba(37,99,235,0.35)' }}>
           <span>📂</span> Evidence Upload
         </button>
 
-        <button onClick={onOpenAudit} style={{ background: '#1e293b', color: '#e2e8f0', border: '1px solid #334155', padding: '5px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <button onClick={onOpenAudit} style={{ background: '#1e293b', color: '#f1f5f9', border: '1px solid #475569', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
           <span>🛡️</span> MHA Audit Log
         </button>
 
-        <div className="status-indicator" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(22, 163, 74, 0.15)', border: '1px solid #4ade8050', padding: '4px 10px', borderRadius: '20px', fontSize: '11px', color: '#4ade80', fontWeight: '700' }}>
-          <span className="pulse-dot" style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80' }}></span>
+        <div className="status-indicator" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10b98160', padding: '5px 12px', borderRadius: '20px', fontSize: '11px', color: '#34d399', fontWeight: '800' }}>
+          <span className="pulse-dot" style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }}></span>
           <span>{isApiConnected ? 'Neo4j Live Engine' : 'Local Intelligence Engine'}</span>
         </div>
       </div>
