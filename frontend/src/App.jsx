@@ -135,42 +135,90 @@ function App() {
   const [globalAdminAlert, setGlobalAdminAlert] = useState(null);
   const prevAdminSightingsCount = React.useRef(0);
 
-  const fetchGraphData = (caseId = selectedCase) => {
-    if (caseId === 'CASE-DATASET-002' || caseId === 'CASE-002') {
-      setNodesData(FINANCIAL_FRAUD_NODES);
-      setEdgesData(FINANCIAL_FRAUD_EDGES);
+const FIR_104_NODES = [
+  { id: 'FIR_104_P1', name: 'Ravi Kumar', label: 'Ravi Kumar', type: 'Person', threat_score: 88, alias: 'Ravi Cyber', phone: '+91 9000000001', x: 200, y: 150 },
+  { id: 'FIR_104_P2', name: 'Rohit Gupta', label: 'Rohit Gupta', type: 'Person', threat_score: 82, alias: 'CallCenter Lead', phone: '+91 9000000002', x: 380, y: 250 },
+  { id: 'FIR_104_L1', name: 'Cyberabad Tech Hub', label: 'Cyberabad Tech Hub', type: 'Location', threat_score: 75, alias: 'Phishing Hub', x: 280, y: 350 },
+  { id: 'FIR_104_A1', name: 'Axis Bank Mule #1002', label: 'Axis Bank Mule #1002', type: 'BankAccount', threat_score: 91, alias: 'Mule Account', x: 120, y: 280 }
+];
+
+const FIR_104_EDGES = [
+  { source: 'FIR_104_P1', target: 'FIR_104_P2', relationship: 'OPERATES_WITH', weight: 0.92, is_high_risk: true },
+  { source: 'FIR_104_P1', target: 'FIR_104_A1', relationship: 'USES_ACCOUNT', weight: 0.95, is_high_risk: true },
+  { source: 'FIR_104_P2', target: 'FIR_104_L1', relationship: 'BASED_AT', weight: 0.88 }
+];
+
+const NEWS_101_NODES = [
+  { id: 'NEWS_101_P1', name: 'Vikram Singh', label: 'Vikram Singh', type: 'Person', threat_score: 90, alias: 'Vikram Ops', phone: '+91 9000000024', x: 250, y: 180 },
+  { id: 'NEWS_101_O1', name: 'Mumbai Port Logistics', label: 'Mumbai Port Logistics', type: 'Organization', threat_score: 86, alias: 'Front Logistics', x: 420, y: 200 },
+  { id: 'NEWS_101_L1', name: 'Dockyard Road Depot', label: 'Dockyard Road Depot', type: 'Location', threat_score: 80, alias: 'Arms Warehouse', x: 180, y: 320 }
+];
+
+const NEWS_101_EDGES = [
+  { source: 'NEWS_101_P1', target: 'NEWS_101_O1', relationship: 'CONTROLS', weight: 0.94, is_high_risk: true },
+  { source: 'NEWS_101_O1', target: 'NEWS_101_L1', relationship: 'OPERATES_FROM', weight: 0.89 }
+];
+
+const NEWS_102_NODES = [
+  { id: 'NEWS_102_P1', name: 'Sanjay Verma', label: 'Sanjay Verma', type: 'Person', threat_score: 93, alias: 'Hawala Handler', phone: '+91 9000000019', x: 220, y: 200 },
+  { id: 'NEWS_102_A1', name: 'Dharavi Shell #4102', label: 'Dharavi Shell #4102', type: 'BankAccount', threat_score: 95, alias: 'Hawala Node', x: 380, y: 180 },
+  { id: 'NEWS_102_L1', name: 'Chandni Chowk Cash Desk', label: 'Chandni Chowk Cash Desk', type: 'Location', threat_score: 87, alias: 'Cash Hub', x: 300, y: 340 }
+];
+
+const NEWS_102_EDGES = [
+  { source: 'NEWS_102_P1', target: 'NEWS_102_A1', relationship: 'CIRCULAR_TRANSFER', weight: 0.97, is_high_risk: true },
+  { source: 'NEWS_102_P1', target: 'NEWS_102_L1', relationship: 'COLLECTS_AT', weight: 0.90 }
+];
+
+const fetchGraphData = (caseId = selectedCase) => {
+  if (caseId === 'CASE-DATASET-002' || caseId === 'CASE-002') {
+    setNodesData(FINANCIAL_FRAUD_NODES);
+    setEdgesData(FINANCIAL_FRAUD_EDGES);
+    setIsApiConnected(true);
+    return;
+  } else if (caseId === 'CASE-FIR-104') {
+    setNodesData(FIR_104_NODES);
+    setEdgesData(FIR_104_EDGES);
+    setIsApiConnected(true);
+    return;
+  } else if (caseId === 'CASE-NEWS-101') {
+    setNodesData(NEWS_101_NODES);
+    setEdgesData(NEWS_101_EDGES);
+    setIsApiConnected(true);
+    return;
+  } else if (caseId === 'CASE-NEWS-102') {
+    setNodesData(NEWS_102_NODES);
+    setEdgesData(NEWS_102_EDGES);
+    setIsApiConnected(true);
+    return;
+  }
+
+  const url = caseId && caseId !== 'ALL' 
+    ? `${API_BASE_URL}/api/graph?case_id=${encodeURIComponent(caseId)}` 
+    : `${API_BASE_URL}/api/graph`;
+
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      if (data.nodes && data.nodes.length > 0) {
+        setNodesData(data.nodes);
+      } else {
+        setNodesData(caseId === 'CASE-001' || caseId === 'ALL' ? INITIAL_NODES : FIR_104_NODES);
+      }
+
+      if (data.edges && data.edges.length > 0) {
+        setEdgesData(data.edges);
+      } else {
+        setEdgesData(caseId === 'CASE-001' || caseId === 'ALL' ? INITIAL_EDGES : FIR_104_EDGES);
+      }
       setIsApiConnected(true);
-      return;
-    }
-
-    const url = caseId && caseId !== 'ALL' 
-      ? `${API_BASE_URL}/api/graph?case_id=${encodeURIComponent(caseId)}` 
-      : `${API_BASE_URL}/api/graph`;
-
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        if (data.nodes && data.nodes.length > 0) {
-          setNodesData(data.nodes);
-        } else if (caseId === 'CASE-DATASET-002') {
-          setNodesData(FINANCIAL_FRAUD_NODES);
-        }
-
-        if (data.edges && data.edges.length > 0) {
-          setEdgesData(data.edges);
-        } else if (caseId === 'CASE-DATASET-002') {
-          setEdgesData(FINANCIAL_FRAUD_EDGES);
-        }
-        setIsApiConnected(true);
-      })
-      .catch(() => {
-        if (caseId === 'CASE-DATASET-002') {
-          setNodesData(FINANCIAL_FRAUD_NODES);
-          setEdgesData(FINANCIAL_FRAUD_EDGES);
-        }
-        setIsApiConnected(false);
-      });
-  };
+    })
+    .catch(() => {
+      setNodesData(caseId === 'CASE-001' || caseId === 'ALL' ? INITIAL_NODES : FIR_104_NODES);
+      setEdgesData(caseId === 'CASE-001' || caseId === 'ALL' ? INITIAL_EDGES : FIR_104_EDGES);
+      setIsApiConnected(false);
+    });
+};
 
   const fetchCases = () => {
     const datasetDefaults = [
