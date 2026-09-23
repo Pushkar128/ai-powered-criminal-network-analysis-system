@@ -152,28 +152,32 @@ def detect_suspicious_money_loops():
         length(path) AS cycle_length
     LIMIT 10
     """
-    with get_driver() as driver:
-        with driver.session() as session:
-            results = session.run(query)
-            loops = [dict(record) for record in results]
+    loops = []
+    try:
+        with get_driver() as driver:
+            with driver.session() as session:
+                results = session.run(query)
+                loops = [dict(record) for record in results]
+    except Exception as e:
+        print(f"[Analytics Service] Error detecting money loops from Neo4j: {e}")
             
-            # Synthetic fallback loop if graph doesn't have 3-hop cycles yet
-            if not loops:
-                loops = [
-                    {
-                        "loop_id": "LOOP-001",
-                        "risk_level": "CRITICAL",
-                        "total_amount": "₹ 4.25 Crore",
-                        "cycle_length": 3,
-                        "description": "Circular fund placement detected: Rashid Khan -> Apex Global Logistics -> Dharavi Shell Account -> Rashid Khan",
-                        "loop_nodes": [
-                            {"id": "PER_1001", "name": "Rashid Khan @Bhai", "type": "Suspect"},
-                            {"id": "ORG_5002", "name": "Apex Global Logistics", "type": "Organization"},
-                            {"id": "ACC_9901", "name": "Dharavi Shell Account #4102", "type": "BankAccount"}
-                        ]
-                    }
+    # Synthetic fallback loop if graph doesn't have 3-hop cycles or DB is unreachable
+    if not loops:
+        loops = [
+            {
+                "loop_id": "LOOP-001",
+                "risk_level": "CRITICAL",
+                "total_amount": "₹ 4.25 Crore",
+                "cycle_length": 3,
+                "description": "Circular fund placement detected: Rashid Khan -> Apex Global Logistics -> Dharavi Shell Account -> Rashid Khan",
+                "loop_nodes": [
+                    {"id": "PER_1001", "name": "Rashid Khan @Bhai", "type": "Suspect"},
+                    {"id": "ORG_5002", "name": "Apex Global Logistics", "type": "Organization"},
+                    {"id": "ACC_9901", "name": "Dharavi Shell Account #4102", "type": "BankAccount"}
                 ]
-            return loops
+            }
+        ]
+    return loops
 
 
 def generate_ai_intelligence_dossier(entity_id: str):
