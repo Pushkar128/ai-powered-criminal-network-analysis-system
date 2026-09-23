@@ -47,7 +47,7 @@ def search_entity(query_text, limit=20):
 # Upgraded: Pre-computes dynamic node sizing by degree influence and flags
 # high-risk evidentiary connections (pulsing/glowing in the UI).
 # ============================================================================
-def get_full_graph(limit=200, case_id=None):
+def get_full_graph(limit=1000, case_id=None):
     """
     Returns visual network elements with:
     - Nodes (Person, Location, Crime) scaled dynamically by degree centrality.
@@ -73,7 +73,7 @@ def get_full_graph(limit=200, case_id=None):
         """
     else:
         query = """
-        MATCH (s:Entity)-[r]->(t:Entity)
+        MATCH (s:Entity)-[r]-(t:Entity)
         WITH s, r, t
         LIMIT $limit
         WITH collect(s) + collect(t) AS all_nodes, collect({source: s, rel: r, target: t}) AS relationships

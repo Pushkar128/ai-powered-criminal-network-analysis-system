@@ -82,7 +82,7 @@ def search_entities(
 # ============================================================================
 @app.get("/api/graph")
 def get_graph(
-    limit: int = Query(200, ge=1, le=1000, description="Max edge traversals to fetch"),
+    limit: int = Query(1000, ge=1, le=5000, description="Max edge traversals to fetch"),
     case_id: Optional[str] = Query(None, description="Optional case ID filter (e.g. CASE-001)"),
 ):
     """Retrieve visual network topology filtered by case ID with dynamic node scaling."""

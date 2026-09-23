@@ -12,14 +12,14 @@ export default function KingpinAnalytics() {
       .then(data => {
         if (data.kingpins) setKingpins(data.kingpins);
       })
-      .catch(() => {});
+      .catch(() => { });
 
     fetch(`${API_BASE_URL}/api/analytics/money-loops`)
       .then(res => res.json())
       .then(data => {
         if (data.money_loops) setMoneyLoops(data.money_loops);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, []);
 
@@ -27,7 +27,7 @@ export default function KingpinAnalytics() {
   return (
     <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-        
+
         {/* PageRank Kingpin Radar */}
         <div className="glass-card" style={{ margin: 0 }}>
           <div style={{ marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
