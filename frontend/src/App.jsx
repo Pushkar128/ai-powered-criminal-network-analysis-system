@@ -135,40 +135,46 @@ function App() {
   const [globalAdminAlert, setGlobalAdminAlert] = useState(null);
   const prevAdminSightingsCount = React.useRef(0);
 
-const FIR_104_NODES = [
-  { id: 'FIR_104_P1', name: 'Ravi Kumar', label: 'Ravi Kumar', type: 'Person', threat_score: 88, alias: 'Ravi Cyber', phone: '+91 9000000001', x: 200, y: 150 },
-  { id: 'FIR_104_P2', name: 'Rohit Gupta', label: 'Rohit Gupta', type: 'Person', threat_score: 82, alias: 'CallCenter Lead', phone: '+91 9000000002', x: 380, y: 250 },
-  { id: 'FIR_104_L1', name: 'Cyberabad Tech Hub', label: 'Cyberabad Tech Hub', type: 'Location', threat_score: 75, alias: 'Phishing Hub', x: 280, y: 350 },
-  { id: 'FIR_104_A1', name: 'Axis Bank Mule #1002', label: 'Axis Bank Mule #1002', type: 'BankAccount', threat_score: 91, alias: 'Mule Account', x: 120, y: 280 }
-];
+const generateFallbackNodes = (prefix, count, types) => {
+  const nodes = [];
+  for (let i = 1; i <= count; i++) {
+    const t = types[i % types.length];
+    nodes.push({
+      id: `${prefix}_${i}`,
+      name: i === 1 ? `Primary Lead (${prefix})` : `${prefix} Entity #${i}`,
+      label: t,
+      type: t,
+      threat_score: 55 + (i % 40),
+      alias: `Target ${i}`,
+      x: 100 + (i % 6) * 90,
+      y: 80 + Math.floor(i / 6) * 60
+    });
+  }
+  return nodes;
+};
 
-const FIR_104_EDGES = [
-  { source: 'FIR_104_P1', target: 'FIR_104_P2', relationship: 'OPERATES_WITH', weight: 0.92, is_high_risk: true },
-  { source: 'FIR_104_P1', target: 'FIR_104_A1', relationship: 'USES_ACCOUNT', weight: 0.95, is_high_risk: true },
-  { source: 'FIR_104_P2', target: 'FIR_104_L1', relationship: 'BASED_AT', weight: 0.88 }
-];
+const generateFallbackEdges = (prefix, count) => {
+  const edges = [];
+  for (let i = 2; i <= count; i++) {
+    edges.push({
+      source: `${prefix}_1`,
+      target: `${prefix}_${i}`,
+      relationship: i % 2 === 0 ? 'ASSOCIATED_WITH' : 'CONNECTED_TO',
+      weight: 0.85,
+      is_high_risk: i % 3 === 0
+    });
+  }
+  return edges;
+};
 
-const NEWS_101_NODES = [
-  { id: 'NEWS_101_P1', name: 'Vikram Singh', label: 'Vikram Singh', type: 'Person', threat_score: 90, alias: 'Vikram Ops', phone: '+91 9000000024', x: 250, y: 180 },
-  { id: 'NEWS_101_O1', name: 'Mumbai Port Logistics', label: 'Mumbai Port Logistics', type: 'Organization', threat_score: 86, alias: 'Front Logistics', x: 420, y: 200 },
-  { id: 'NEWS_101_L1', name: 'Dockyard Road Depot', label: 'Dockyard Road Depot', type: 'Location', threat_score: 80, alias: 'Arms Warehouse', x: 180, y: 320 }
-];
+const FIR_104_NODES = generateFallbackNodes('FIR_104', 45, ['Person', 'BankAccount', 'Phone', 'Location']);
+const FIR_104_EDGES = generateFallbackEdges('FIR_104', 45);
 
-const NEWS_101_EDGES = [
-  { source: 'NEWS_101_P1', target: 'NEWS_101_O1', relationship: 'CONTROLS', weight: 0.94, is_high_risk: true },
-  { source: 'NEWS_101_O1', target: 'NEWS_101_L1', relationship: 'OPERATES_FROM', weight: 0.89 }
-];
+const NEWS_101_NODES = generateFallbackNodes('NEWS_101', 38, ['Person', 'Organization', 'Location']);
+const NEWS_101_EDGES = generateFallbackEdges('NEWS_101', 38);
 
-const NEWS_102_NODES = [
-  { id: 'NEWS_102_P1', name: 'Sanjay Verma', label: 'Sanjay Verma', type: 'Person', threat_score: 93, alias: 'Hawala Handler', phone: '+91 9000000019', x: 220, y: 200 },
-  { id: 'NEWS_102_A1', name: 'Dharavi Shell #4102', label: 'Dharavi Shell #4102', type: 'BankAccount', threat_score: 95, alias: 'Hawala Node', x: 380, y: 180 },
-  { id: 'NEWS_102_L1', name: 'Chandni Chowk Cash Desk', label: 'Chandni Chowk Cash Desk', type: 'Location', threat_score: 87, alias: 'Cash Hub', x: 300, y: 340 }
-];
-
-const NEWS_102_EDGES = [
-  { source: 'NEWS_102_P1', target: 'NEWS_102_A1', relationship: 'CIRCULAR_TRANSFER', weight: 0.97, is_high_risk: true },
-  { source: 'NEWS_102_P1', target: 'NEWS_102_L1', relationship: 'COLLECTS_AT', weight: 0.90 }
-];
+const NEWS_102_NODES = generateFallbackNodes('NEWS_102', 29, ['Person', 'BankAccount', 'Location']);
+const NEWS_102_EDGES = generateFallbackEdges('NEWS_102', 29);
 
 const fetchGraphData = (caseId = selectedCase) => {
   const getFallbackGraph = (cid) => {
