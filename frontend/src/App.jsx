@@ -371,6 +371,7 @@ const fetchGraphData = (caseId = selectedCase) => {
   };
 
   useEffect(() => {
+    setSelectedNode(null);
     fetchGraphData(selectedCase);
     fetchCases();
   }, [selectedCase]);

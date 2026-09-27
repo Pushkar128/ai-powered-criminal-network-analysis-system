@@ -94,7 +94,7 @@ export default function NetworkTopology({
 
   // Subgraph isolation: STRICT 1-HOP DIRECT CONNECTIONS ONLY (target person + direct phone, vehicle, location & associate nodes)
   const activeNetworkIds = React.useMemo(() => {
-    if (!selectedNode) return null;
+    if (!selectedNode || !nodesData || !nodesData.some(n => n.id === selectedNode.id)) return null;
 
     const direct1Hop = new Set();
     (edgesData || []).forEach(e => {
@@ -107,7 +107,7 @@ export default function NetworkTopology({
       directIds: direct1Hop,
       allNetworkIds: new Set([selectedNode.id, ...direct1Hop])
     };
-  }, [selectedNode, edgesData]);
+  }, [selectedNode, nodesData, edgesData]);
 
   // When selectedNode is active, arrange target at center and direct nodes in a clean radial circle around it
   useEffect(() => {
