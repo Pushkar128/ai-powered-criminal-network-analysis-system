@@ -3,9 +3,9 @@ import pandas as pd
 from neo4j import GraphDatabase
 
 # Neo4j AuraDB Connection Config
-NEO4J_URI = os.getenv("NEO4J_URI", "neo4j+ssc://6c134cfd.databases.neo4j.io")
-NEO4J_USERNAME = os.getenv("NEO4J_USERNAME", "6c134cfd")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "jDqtQHhL8GFH81dufMU-xIbBdh-d3IGoSPBfqVAGHQ8")
+NEO4J_URI = os.getenv("NEO4J_URI", "neo4j+s://ed0838c3.databases.neo4j.io")
+NEO4J_USERNAME = os.getenv("NEO4J_USERNAME", "ed0838c3")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "Ac8E-vCF__J_OE0if9lf-kNg7ErLjxDLuWnHxVujBCI")
 
 # Dynamic root path resolution
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))

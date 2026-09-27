@@ -2,9 +2,9 @@ import os
 from neo4j import GraphDatabase
 
 # Neo4j Connection Credentials (reads from environment variables)
-URI = os.getenv("NEO4J_URI", "neo4j+ssc://6c134cfd.databases.neo4j.io")
-USERNAME = os.getenv("NEO4J_USERNAME", "6c134cfd")
-PASSWORD = os.getenv("NEO4J_PASSWORD", "jDqtQHhL8GFH81dufMU-xIbBdh-d3IGoSPBfqVAGHQ8")
+URI = os.getenv("NEO4J_URI", "neo4j+s://ed0838c3.databases.neo4j.io")
+USERNAME = os.getenv("NEO4J_USERNAME", "ed0838c3")
+PASSWORD = os.getenv("NEO4J_PASSWORD", "Ac8E-vCF__J_OE0if9lf-kNg7ErLjxDLuWnHxVujBCI")
 
 AUTH = (USERNAME, PASSWORD)
 
