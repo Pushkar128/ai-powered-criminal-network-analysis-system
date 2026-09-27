@@ -341,8 +341,8 @@ def get_all_cases(driver):
     # Ensure default comprehensive cases (Datasets, FIRs, OSINT News) are present
     existing_ids = {c["case_id"] for c in cases}
     default_cases = [
-        {"case_id": "CASE-001", "title": "Case #001: Primary Suspect Network [Dataset]", "node_count": 149, "is_dataset": True},
-        {"case_id": "CASE-DATASET-002", "title": "Case #002: Financial Fraud & Money Laundering [Dataset]", "node_count": 120, "is_dataset": True},
+        {"case_id": "CASE-001", "title": "Case #001: Primary Suspect Network [Dataset]", "node_count": 132, "is_dataset": True},
+        {"case_id": "CASE-DATASET-002", "title": "Case #002: Financial Fraud & Money Laundering [Dataset]", "node_count": 81, "is_dataset": True},
         {"case_id": "CASE-FIR-104", "title": "Case #104: Hyderabad Cyber Fraud FIR Network", "node_count": 45, "is_dataset": False},
         {"case_id": "CASE-NEWS-101", "title": "Case #101: OSINT Live News Intelligence Cluster", "node_count": 38, "is_dataset": False},
         {"case_id": "CASE-NEWS-102", "title": "Case #102: Hawala Transfer & Illegal Syndicate Cluster", "node_count": 29, "is_dataset": False}

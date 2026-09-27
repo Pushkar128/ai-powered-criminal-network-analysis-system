@@ -176,6 +176,9 @@ const NEWS_101_EDGES = generateFallbackEdges('NEWS_101', 38);
 const NEWS_102_NODES = generateFallbackNodes('NEWS_102', 29, ['Person', 'BankAccount', 'Location']);
 const NEWS_102_EDGES = generateFallbackEdges('NEWS_102', 29);
 
+const FINANCIAL_FRAUD_NODES = generateFallbackNodes('FIN_ACC', 81, ['BankAccount', 'Person', 'Organization', 'CryptoWallet', 'Location']);
+const FINANCIAL_FRAUD_EDGES = generateFallbackEdges('FIN_ACC', 81);
+
 const fetchGraphData = (caseId = selectedCase) => {
   const getFallbackGraph = (cid) => {
     if (cid === 'CASE-DATASET-002' || cid === 'CASE-002') {
@@ -217,8 +220,8 @@ const fetchGraphData = (caseId = selectedCase) => {
 
   const fetchCases = () => {
     const datasetDefaults = [
-      { case_id: 'CASE-001', title: 'Case #001: Primary Suspect Network [Dataset]', node_count: 149, is_dataset: true },
-      { case_id: 'CASE-DATASET-002', title: 'Case #002: Financial Fraud & Money Laundering [Dataset]', node_count: 120, is_dataset: true }
+      { case_id: 'CASE-001', title: 'Case #001: Primary Suspect Network [Dataset]', node_count: 132, is_dataset: true },
+      { case_id: 'CASE-DATASET-002', title: 'Case #002: Financial Fraud & Money Laundering [Dataset]', node_count: 81, is_dataset: true }
     ];
 
     fetch(`${API_BASE_URL}/api/cases`)
