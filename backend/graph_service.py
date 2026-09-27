@@ -52,14 +52,13 @@ def get_full_graph(limit=1000, case_id=None):
     Returns visual network elements with:
     - Nodes (Person, Location, Crime) scaled dynamically by degree centrality.
     - Edges (LIVES_AT, ASSOCIATED_WITH, INVOLVED_IN) tagged with risk weights.
-    - Optional case_id filtering including isolated nodes.
+    - Optional case_id filtering including isolated nodes and connected neighbors.
     """
     if case_id and case_id.upper() != "ALL":
         query = """
         MATCH (n:Entity)
         WHERE coalesce(n.case_id, 'CASE-001') = $case_id
         OPTIONAL MATCH (n)-[r]-(other:Entity)
-        WHERE coalesce(other.case_id, 'CASE-001') = $case_id
         WITH n, collect(DISTINCT {source: n, rel: r, target: other}) AS rels, count(r) AS degree
         RETURN 
             n.id AS id,
@@ -101,8 +100,35 @@ def get_full_graph(limit=1000, case_id=None):
             nodes = {}
             edges = []
             seen_edges = set()
+
+            def extract_node_data(obj):
+                if not obj:
+                    return None, None
+                d = {}
+                if isinstance(obj, dict):
+                    d = obj
+                else:
+                    try:
+                        d = dict(obj)
+                    except Exception:
+                        pass
+                nid = d.get("id") or d.get("entity_id") or getattr(obj, "id", None)
+                if not nid:
+                    return None, None
+                nid = str(nid)
+                node_dict = {
+                    "id": nid,
+                    "label": d.get("name") or d.get("label") or nid,
+                    "type": d.get("type") or "Unknown",
+                    "alias": d.get("alias", ""),
+                    "case_id": d.get("case_id", "CASE-001"),
+                    "size": 18,
+                    "degree": 1
+                }
+                return nid, node_dict
+
             for row in results:
-                node_id = row["id"]
+                node_id = str(row["id"])
                 if node_id not in nodes:
                     nodes[node_id] = {
                         "id": node_id,
@@ -122,17 +148,14 @@ def get_full_graph(limit=1000, case_id=None):
                         rel = item.get("rel")
                         if not src or not tgt or not rel: continue
 
-                        def extract_id(obj):
-                            if isinstance(obj, dict):
-                                return obj.get("id") or obj.get("entity_id")
-                            try:
-                                return obj.get("id") or obj.get("entity_id") or dict(obj).get("id")
-                            except Exception:
-                                return getattr(obj, "id", None)
-
-                        src_id = extract_id(src)
-                        tgt_id = extract_id(tgt)
+                        src_id, src_node = extract_node_data(src)
+                        tgt_id, tgt_node = extract_node_data(tgt)
                         if not src_id or not tgt_id: continue
+
+                        if src_id not in nodes and src_node:
+                            nodes[src_id] = src_node
+                        if tgt_id not in nodes and tgt_node:
+                            nodes[tgt_id] = tgt_node
 
                         edge_key = f"{src_id}->{tgt_id}"
                         rev_key = f"{tgt_id}->{src_id}"

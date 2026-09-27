@@ -171,27 +171,18 @@ const NEWS_102_EDGES = [
 ];
 
 const fetchGraphData = (caseId = selectedCase) => {
-  if (caseId === 'CASE-DATASET-002' || caseId === 'CASE-002') {
-    setNodesData(FINANCIAL_FRAUD_NODES);
-    setEdgesData(FINANCIAL_FRAUD_EDGES);
-    setIsApiConnected(true);
-    return;
-  } else if (caseId === 'CASE-FIR-104') {
-    setNodesData(FIR_104_NODES);
-    setEdgesData(FIR_104_EDGES);
-    setIsApiConnected(true);
-    return;
-  } else if (caseId === 'CASE-NEWS-101') {
-    setNodesData(NEWS_101_NODES);
-    setEdgesData(NEWS_101_EDGES);
-    setIsApiConnected(true);
-    return;
-  } else if (caseId === 'CASE-NEWS-102') {
-    setNodesData(NEWS_102_NODES);
-    setEdgesData(NEWS_102_EDGES);
-    setIsApiConnected(true);
-    return;
-  }
+  const getFallbackGraph = (cid) => {
+    if (cid === 'CASE-DATASET-002' || cid === 'CASE-002') {
+      return { nodes: FINANCIAL_FRAUD_NODES, edges: FINANCIAL_FRAUD_EDGES };
+    } else if (cid === 'CASE-FIR-104') {
+      return { nodes: FIR_104_NODES, edges: FIR_104_EDGES };
+    } else if (cid === 'CASE-NEWS-101') {
+      return { nodes: NEWS_101_NODES, edges: NEWS_101_EDGES };
+    } else if (cid === 'CASE-NEWS-102') {
+      return { nodes: NEWS_102_NODES, edges: NEWS_102_EDGES };
+    }
+    return { nodes: INITIAL_NODES, edges: INITIAL_EDGES };
+  };
 
   const url = caseId && caseId !== 'ALL' 
     ? `${API_BASE_URL}/api/graph?case_id=${encodeURIComponent(caseId)}` 
@@ -202,20 +193,18 @@ const fetchGraphData = (caseId = selectedCase) => {
     .then(data => {
       if (data.nodes && data.nodes.length > 0) {
         setNodesData(data.nodes);
+        setEdgesData(data.edges || []);
       } else {
-        setNodesData(caseId === 'CASE-001' || caseId === 'ALL' ? INITIAL_NODES : FIR_104_NODES);
-      }
-
-      if (data.edges && data.edges.length > 0) {
-        setEdgesData(data.edges);
-      } else {
-        setEdgesData(caseId === 'CASE-001' || caseId === 'ALL' ? INITIAL_EDGES : FIR_104_EDGES);
+        const fallback = getFallbackGraph(caseId);
+        setNodesData(fallback.nodes);
+        setEdgesData(fallback.edges);
       }
       setIsApiConnected(true);
     })
     .catch(() => {
-      setNodesData(caseId === 'CASE-001' || caseId === 'ALL' ? INITIAL_NODES : FIR_104_NODES);
-      setEdgesData(caseId === 'CASE-001' || caseId === 'ALL' ? INITIAL_EDGES : FIR_104_EDGES);
+      const fallback = getFallbackGraph(caseId);
+      setNodesData(fallback.nodes);
+      setEdgesData(fallback.edges);
       setIsApiConnected(false);
     });
 };
